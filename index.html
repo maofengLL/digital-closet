@@ -11,23 +11,35 @@
 <body>
   <header>数字衣柜</header>
 
-  <main id="home">
+  <!-- 视图1：录入 -->
+  <main id="homeView">
     <p class="tip">选择要录入的衣服类别</p>
-    <!-- 品类按钮由 app.js 动态生成，这里只留一个空容器 -->
     <div id="catGrid" class="cat-grid"></div>
   </main>
 
-  <!-- 隐藏的输入框：调起相机和相册全靠它 -->
-  <!-- capture="environment" 表示调起后置摄像头（安卓直接开相机；iOS 行为不定，所以两条路都留） -->
+  <!-- 视图2：衣柜（默认隐藏） -->
+  <main id="wardrobeView" class="hidden">
+    <div id="wardrobeTabs" class="tabs"></div>
+    <div id="wardrobeGrid" class="wardrobe-grid"></div>
+    <p id="emptyTip" class="tip center hidden">衣柜还是空的，去"录入"一件吧</p>
+  </main>
+
+  <!-- 底部导航 -->
+  <nav class="bottom-nav">
+    <button id="navHome" class="active" onclick="switchView('home')">录入</button>
+    <button id="navWardrobe" onclick="switchView('wardrobe')">衣柜</button>
+  </nav>
+
+  <!-- 相机/相册的隐藏入口 -->
   <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="onFileChosen(event)">
   <input type="file" id="albumInput" accept="image/*" style="display:none" onchange="onFileChosen(event)">
 
-  <!-- 拍照后的预览层，默认隐藏 -->
+  <!-- 拍照预览层 -->
   <div id="preview" class="preview hidden">
     <img id="previewImg" alt="衣服照片">
     <div class="preview-bar">
       <button onclick="backHome()">重选</button>
-      <button class="primary" onclick="confirmPhoto()">确认（存储下一步做）</button>
+      <button class="primary" onclick="confirmPhoto()">确认</button>
     </div>
   </div>
 
