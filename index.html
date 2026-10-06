@@ -19,8 +19,8 @@
 
   <!-- 隐藏的输入框：调起相机和相册全靠它 -->
   <!-- capture="environment" 表示调起后置摄像头（安卓直接开相机；iOS 行为不定，所以两条路都留） -->
-  <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
-  <input type="file" id="albumInput" accept="image/*" style="display:none">
+  <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="onFileChosen(event)">
+  <input type="file" id="albumInput" accept="image/*" style="display:none" onchange="onFileChosen(event)">
 
   <!-- 拍照后的预览层，默认隐藏 -->
   <div id="preview" class="preview hidden">
