@@ -1,0 +1,54 @@
+/* 万能清零：去掉浏览器自带的默认间距，盒模型用 border-box（宽高含边框，好控制） */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: sans-serif;   /* 系统默认无衬线字体 */
+  background: #FAFAF7;       /* 页面底色：米白 */
+  color: #2B2B2B;            /* 文字色：深炭灰，不用纯黑（纯黑刺眼） */
+}
+
+/* 顶部标题栏 */
+header {
+  padding: 16px;             /* 内边距：四面留白 */
+  font-size: 18px;
+  font-weight: 600;          /* 600=半粗 */
+  background: #fff;
+  border-bottom: 1px solid #E5E2DA;  /* 底部分隔线 */
+}
+
+main { padding: 16px; }
+
+.tip { font-size: 13px; color: #8A867D; margin-bottom: 12px; }
+
+/* 输入区：flex 让输入框和按钮并排，gap 是两者的间距 */
+.input-row { display: flex; gap: 8px; }
+
+input {
+  flex: 1;                   /* 输入框吃掉所有剩余宽度，按钮只占自己的大小 */
+  padding: 10px;
+  border: 1px solid #D8D4CA;
+  border-radius: 8px;        /* 圆角 */
+  font-size: 15px;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #2B2B2B;       /* 深底白字的对比按钮 */
+  color: #fff;
+  font-size: 15px;
+}
+
+/* 历史记录列表 */
+ul { margin-top: 16px; list-style: none; }  /* 去掉圆点 */
+
+/* 每条记录：白底卡片样式 */
+li {
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #E5E2DA;
+  border-radius: 8px;
+  margin-bottom: 8px;        /* 卡片之间的间距 */
+  font-size: 15px;
+}
