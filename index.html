@@ -43,7 +43,16 @@
   <!-- 相机/相册的隐藏入口 -->
   <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="onFileChosen(event)">
   <input type="file" id="albumInput" accept="image/*" style="display:none" onchange="onFileChosen(event)">
-
+ 
+  <!-- 大图查看层：衣柜里点衣服时打开 -->
+  <div id="detail" class="preview hidden">
+    <button class="preview-back" onclick="closeDetail()">←</button>
+    <img id="detailImg" alt="衣服大图">
+    <div class="preview-bar">
+      <button class="danger" onclick="deleteCurrent()">删除这件</button>
+      <button class="primary" onclick="closeDetail()">关闭</button>
+    </div>
+  </div>
   <!-- 预览层：全屏覆盖，返回键在左上角 -->
   <div id="preview" class="preview hidden">
     <button class="preview-back" onclick="exitPreview()">←</button>
