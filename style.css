@@ -1,95 +1,41 @@
-/* ===== 基础 ===== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: sans-serif;
-  background: #FAFAF7;
-  color: #2B2B2B;
-  padding-bottom: 60px;   /* 底部给导航栏留位置，内容不被挡住 */
-}
-header {
-  padding: 16px;
-  font-size: 18px;
-  font-weight: 600;
-  background: #fff;
-  border-bottom: 1px solid #E5E2DA;
-}
+body { font-family: sans-serif; background: #FAFAF7; color: #2B2B2B; padding-bottom: 60px; }
+header { display: flex; align-items: center; padding: 14px 16px; font-size: 18px; font-weight: 600; background: #fff; border-bottom: 1px solid #E5E2DA; }
+.back-btn { background: none; border: none; font-size: 20px; color: #2B2B2B; padding-right: 8px; }
 main { padding: 16px; }
 .tip { font-size: 13px; color: #8A867D; margin-bottom: 12px; }
-.tip.center { text-align: center; margin-top: 40px; }  /* 空衣柜提示专用 */
-button {
-  font-family: inherit;
-  -webkit-appearance: none;   /* 剥掉手机浏览器强加的默认按钮皮肤 */
-  appearance: none;
-}
+.tip.center { text-align: center; margin-top: 40px; }
+button { font-family: inherit; -webkit-appearance: none; appearance: none; }
 .hidden { display: none; }
 
-/* ===== 录入页：品类按钮 ===== */
+/* 首页品类 */
 .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.cat-btn {
-  padding: 28px 0;
-  font-size: 17px;
-  color: #2B2B2B;         /* 注意：必须写颜色，否则会被 button 默认样式带偏 */
-  background: #fff;
-  border: 1px solid #E5E2DA;
-  border-radius: 12px;
-}
-.cat-btn:active { background: #EFEBE2; }   /* 按下的反馈 */
+.cat-btn { padding: 28px 0; font-size: 17px; color: #2B2B2B; background: #fff; border: 1px solid #E5E2DA; border-radius: 12px; }
+.cat-btn:active { background: #EFEBE2; }
 
-.src-row { display: flex; gap: 10px; margin-top: 8px; }
-.src-row button {
-  flex: 1; padding: 22px 0; font-size: 16px;
-  background: #2B2B2B; color: #fff; border: none; border-radius: 12px;
-}
+/* 品类页 */
+.big-btn { width: 100%; padding: 26px 0; font-size: 18px; background: #2B2B2B; color: #fff; border: none; border-radius: 12px; }
+.src-row { display: flex; gap: 10px; }
+.src-row button { flex: 1; padding: 22px 0; font-size: 16px; background: #2B2B2B; color: #fff; border: none; border-radius: 12px; }
 
-/* ===== 衣柜页 ===== */
-/* 分类 Tab：横向可滑动的一排胶囊按钮 */
+/* 衣柜 */
 .tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; }
-.tab {
-  flex: 0 0 auto;         /* 不收缩，超出就横滑 */
-  padding: 8px 16px;
-  font-size: 14px;
-  color: #2B2B2B;
-  background: #fff;
-  border: 1px solid #E5E2DA;
-  border-radius: 999px;   /* 两端半圆 = 胶囊 */
-}
+.tab { flex: 0 0 auto; padding: 8px 16px; font-size: 14px; color: #2B2B2B; background: #fff; border: 1px solid #E5E2DA; border-radius: 999px; }
 .tab.active { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
-
-/* 照片网格：三列，正方形 */
 .wardrobe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.thumb {
-  aspect-ratio: 1;        /* 宽高比 1:1，正方形 */
-  border-radius: 10px;
-  overflow: hidden;       /* 图片超出圆角的部分切掉 */
-  background: #fff;
-  border: 1px solid #E5E2DA;
-}
-.thumb img { width: 100%; height: 100%; object-fit: cover; }  /* 填满格子，居中裁剪 */
+.thumb { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid #E5E2DA; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-/* ===== 拍照预览层 ===== */
-.preview {
-  position: fixed; inset: 0;   /* 铺满全屏 */
-  background: #000;
-  display: flex; flex-direction: column;
-  z-index: 10;                /* 确保盖在一切之上 */
-}
+/* 预览层 */
+.preview { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; z-index: 10; }
 .preview img { flex: 1; object-fit: contain; width: 100%; }
+/* 左上角圆形返回键 */
+.preview-back { position: absolute; top: 12px; left: 12px; z-index: 11; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,.5); color: #fff; font-size: 20px; border: none; }
 .preview-bar { display: flex; gap: 10px; padding: 16px; }
-.preview-bar button {
-  flex: 1; padding: 14px 0; font-size: 16px;
-  border: none; border-radius: 10px; background: #444; color: #fff;
-}
+.preview-bar button { flex: 1; padding: 14px 0; font-size: 15px; border: none; border-radius: 10px; background: #444; color: #fff; }
 .preview-bar .primary { background: #2B2B2B; }
 
-/* ===== 底部导航 ===== */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  display: flex;
-  background: #fff;
-  border-top: 1px solid #E5E2DA;
-}
-.bottom-nav button {
-  flex: 1; padding: 14px 0; font-size: 15px;
-  color: #8A867D; background: none; border: none;
-}
+/* 底部导航 */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: #fff; border-top: 1px solid #E5E2DA; }
+.bottom-nav button { flex: 1; padding: 14px 0; font-size: 15px; color: #8A867D; background: none; border: none; }
 .bottom-nav button.active { color: #2B2B2B; font-weight: 600; }
