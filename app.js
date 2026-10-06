@@ -75,20 +75,40 @@ function backHome() {
   renderCategories();
 }
 
-// 确认：真正存进数据库
+// 确认：存进数据库（带状态反馈和错误提示，出了问题会弹窗告诉我们）
 function confirmPhoto() {
-  if (!currentPhoto) return;
-  const tx = db.transaction('clothes', 'readwrite');
-  tx.objectStore('clothes').add({
-    image: currentPhoto,     // Blob 直接存，不用转换格式
-    category: currentCategory,
-    time: Date.now()
-  });
-  tx.oncomplete = () => {
-    currentPhoto = null;
-    backHome();              // 回到录入页，可以继续拍下一件
-  };
+  if (!currentPhoto) { alert('请先选择照片'); return; }
+  if (!db) { alert('数据库还没准备好，请等一秒再点'); return; }
+
+  const btn = document.getElementById('confirmBtn');
+  btn.textContent = '保存中…';
+  btn.disabled = true;
+
+  try {
+    const tx = db.transaction('clothes', 'readwrite');
+    tx.objectStore('clothes').add({
+      image: currentPhoto,
+      category: currentCategory,
+      time: Date.now()
+    });
+    tx.oncomplete = () => {
+      currentPhoto = null;
+      btn.textContent = '确认';
+      btn.disabled = false;
+      backHome();
+    };
+    tx.onerror = () => {
+      alert('保存失败：' + tx.error.message);
+      btn.textContent = '确认';
+      btn.disabled = false;
+    };
+  } catch (err) {
+    alert('出错了：' + err.message);
+    btn.textContent = '确认';
+    btn.disabled = false;
+  }
 }
+
 
 // ---------- 衣柜浏览 ----------
 const TABS = ['全部', ...CATEGORIES];
