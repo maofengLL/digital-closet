@@ -1,91 +1,91 @@
-/* 万能清零：去掉浏览器自带的默认间距，盒模型用 border-box（宽高含边框，好控制） */
+/* ===== 基础 ===== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
 body {
-  font-family: sans-serif;   /* 系统默认无衬线字体 */
-  background: #FAFAF7;       /* 页面底色：米白 */
-  color: #2B2B2B;            /* 文字色：深炭灰，不用纯黑（纯黑刺眼） */
+  font-family: sans-serif;
+  background: #FAFAF7;
+  color: #2B2B2B;
+  padding-bottom: 60px;   /* 底部给导航栏留位置，内容不被挡住 */
 }
-
-/* 顶部标题栏 */
 header {
-  padding: 16px;             /* 内边距：四面留白 */
+  padding: 16px;
   font-size: 18px;
-  font-weight: 600;          /* 600=半粗 */
+  font-weight: 600;
   background: #fff;
-  border-bottom: 1px solid #E5E2DA;  /* 底部分隔线 */
+  border-bottom: 1px solid #E5E2DA;
 }
-
 main { padding: 16px; }
-
 .tip { font-size: 13px; color: #8A867D; margin-bottom: 12px; }
+.tip.center { text-align: center; margin-top: 40px; }  /* 空衣柜提示专用 */
+button { font-family: inherit; }   /* 按钮文字跟随页面字体 */
+.hidden { display: none; }
 
-/* 输入区：flex 让输入框和按钮并排，gap 是两者的间距 */
-.input-row { display: flex; gap: 8px; }
-
-input {
-  flex: 1;                   /* 输入框吃掉所有剩余宽度，按钮只占自己的大小 */
-  padding: 10px;
-  border: 1px solid #D8D4CA;
-  border-radius: 8px;        /* 圆角 */
-  font-size: 15px;
-}
-
-button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  background: #2B2B2B;       /* 深底白字的对比按钮 */
-  color: #fff;
-  font-size: 15px;
-}
-
-/* 历史记录列表 */
-ul { margin-top: 16px; list-style: none; }  /* 去掉圆点 */
-
-/* 每条记录：白底卡片样式 */
-li {
-  padding: 10px 12px;
-  background: #fff;
-  border: 1px solid #E5E2DA;
-  border-radius: 8px;
-  margin-bottom: 8px;        /* 卡片之间的间距 */
-  font-size: 15px;
-}
-/* ===== 品类按钮网格：两列，大按钮好按 ===== */
-.cat-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;  /* 两列等宽 */
-  gap: 10px;
-}
-
+/* ===== 录入页：品类按钮 ===== */
+.cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .cat-btn {
-  padding: 28px 0;                 /* 上下大量留白 = 大按钮 */
+  padding: 28px 0;
   font-size: 17px;
-  color: #2B2B2B;  
+  color: #2B2B2B;         /* 注意：必须写颜色，否则会被 button 默认样式带偏 */
   background: #fff;
   border: 1px solid #E5E2DA;
   border-radius: 12px;
 }
+.cat-btn:active { background: #EFEBE2; }   /* 按下的反馈 */
 
-.cat-btn:active { background: #EFEBE2; }  /* 按下时的反馈 */
-
-/* ===== 来源选择（拍照/相册）====== */
 .src-row { display: flex; gap: 10px; margin-top: 8px; }
-.src-row button { flex: 1; padding: 22px 0; font-size: 16px; background: #2B2B2B; color: #fff; border: none; border-radius: 12px; }
-
-/* ===== 预览层：盖住全屏 ===== */
-.preview {
-  position: fixed;      /* 固定定位：悬浮在所有内容之上 */
-  inset: 0;             /* 上右下左全是 0 = 铺满全屏 */
-  background: #000;
-  display: flex;
-  flex-direction: column;
+.src-row button {
+  flex: 1; padding: 22px 0; font-size: 16px;
+  background: #2B2B2B; color: #fff; border: none; border-radius: 12px;
 }
-.preview img { flex: 1; object-fit: contain; width: 100%; }  /* 图片缩放显示，不变形 */
-.preview-bar { display: flex; gap: 10px; padding: 16px; }
-.preview-bar button { flex: 1; padding: 14px 0; font-size: 16px; border: none; border-radius: 10px; }
-.preview-bar .primary { background: #2B2B2B; color: #fff; }
-.preview-bar button:first-child { background: #444; color: #fff; }
 
-.hidden { display: none; }   /* 通用隐藏类 */
+/* ===== 衣柜页 ===== */
+/* 分类 Tab：横向可滑动的一排胶囊按钮 */
+.tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; }
+.tab {
+  flex: 0 0 auto;         /* 不收缩，超出就横滑 */
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #2B2B2B;
+  background: #fff;
+  border: 1px solid #E5E2DA;
+  border-radius: 999px;   /* 两端半圆 = 胶囊 */
+}
+.tab.active { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
+
+/* 照片网格：三列，正方形 */
+.wardrobe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.thumb {
+  aspect-ratio: 1;        /* 宽高比 1:1，正方形 */
+  border-radius: 10px;
+  overflow: hidden;       /* 图片超出圆角的部分切掉 */
+  background: #fff;
+  border: 1px solid #E5E2DA;
+}
+.thumb img { width: 100%; height: 100%; object-fit: cover; }  /* 填满格子，居中裁剪 */
+
+/* ===== 拍照预览层 ===== */
+.preview {
+  position: fixed; inset: 0;   /* 铺满全屏 */
+  background: #000;
+  display: flex; flex-direction: column;
+  z-index: 10;                /* 确保盖在一切之上 */
+}
+.preview img { flex: 1; object-fit: contain; width: 100%; }
+.preview-bar { display: flex; gap: 10px; padding: 16px; }
+.preview-bar button {
+  flex: 1; padding: 14px 0; font-size: 16px;
+  border: none; border-radius: 10px; background: #444; color: #fff;
+}
+.preview-bar .primary { background: #2B2B2B; }
+
+/* ===== 底部导航 ===== */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  display: flex;
+  background: #fff;
+  border-top: 1px solid #E5E2DA;
+}
+.bottom-nav button {
+  flex: 1; padding: 14px 0; font-size: 15px;
+  color: #8A867D; background: none; border: none;
+}
+.bottom-nav button.active { color: #2B2B2B; font-weight: 600; }
