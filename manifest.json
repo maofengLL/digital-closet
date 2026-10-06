@@ -1,0 +1,11 @@
+{
+  "name": "数字衣柜",       
+  "short_name": "衣柜",      
+  "start_url": ".",          
+  "display": "standalone",   
+  "background_color": "#FAFAF7",
+  "theme_color": "#FAFAF7",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
