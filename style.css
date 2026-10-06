@@ -6,7 +6,7 @@ main { padding: 16px; }
 .tip { font-size: 13px; color: #8A867D; margin-bottom: 12px; }
 .tip.center { text-align: center; margin-top: 40px; }
 button { font-family: inherit; -webkit-appearance: none; appearance: none; }
-.hidden { display: none; }
+.hidden { display: none !important; }   /* !important = 隐藏优先级最高，谁都别想覆盖 */
 
 /* 首页品类 */
 .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
