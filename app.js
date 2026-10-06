@@ -1,57 +1,77 @@
-// ========== IndexedDB：浏览器自带的"本地数据库" ==========
-// 特点：数据存在手机/电脑本地，关网页、断网都不会丢
-// 结构：数据库(closet-db) -> 表(notes) -> 记录(每条有 id 和 text)
+// ========== 品类与拍摄流程 ==========
+// 流程：首页点品类 → 出现"拍照/相册"两个选项 → 选图 → 全屏预览 → 确认或重选
 
-let db;  // 全局变量：装打开后的数据库
+// 7 个大类（细分品类靠轮廓区分，不在这一步问）
+const CATEGORIES = ['上装', '裤装', '裙装', '外套', '鞋', '配饰', '其他'];
 
-// open(名字, 版本号)：请求打开数据库
-const req = indexedDB.open('closet-db', 1);
+// 本次选择的记录：选了哪个品类、哪张照片
+let currentCategory = '';
+let currentPhoto = null;
 
-// 第一次打开（或版本升级）时触发：在这里建表
-req.onupgradeneeded = e => {
-  db = e.target.result;  // e.target 就是这个数据库
-  // 建表 notes：keyPath 是主键，autoIncrement 表示 id 自动递增（1,2,3...）
-  db.createObjectStore('notes', { keyPath: 'id', autoIncrement: true });
+// 页面加载完，生成品类按钮
+window.onload = () => {
+  renderCategories();
 };
 
-// 打开成功：存好数据库，然后加载历史记录
-req.onsuccess = e => { db = e.target.result; loadNotes(); };
-
-// 打开失败：给提示
-req.onerror = () => alert('数据库打开失败，请换 Chrome 浏览器');
-
-// ========== 存记录 ==========
-function saveNote() {
-  const input = document.getElementById('note');
-  const text = input.value.trim();   // trim()：去掉首尾空格
-  if (!text) return;                 // 空内容不存
-
-  // transaction(表名, 'readwrite')：开一次"读写事务"
-  const tx = db.transaction('notes', 'readwrite');
-  // add()：插入一条新记录，内容是文字+时间戳
-  tx.objectStore('notes').add({ text: text, time: Date.now() });
-
-  // 事务完成：清空输入框，刷新列表
-  tx.oncomplete = () => { input.value = ''; loadNotes(); };
+function renderCategories() {
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = '';  // 清空重来（后面从预览返回时也要用）
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn';
+    btn.textContent = cat;
+    // 点品类 → 问"拍照还是相册"
+    btn.onclick = () => askSource(cat);
+    grid.appendChild(btn);
+  });
 }
 
-// ========== 读记录（每次新增后刷新界面） ==========
-function loadNotes() {
-  const out = document.getElementById('list');
-  out.innerHTML = '';  // 清空列表，准备重画
+function askSource(cat) {
+  currentCategory = cat;  // 记住用户选了什么品类
+  const grid = document.getElementById('catGrid');
+  // 把按钮区临时换成两个大选项（返回时会重新生成按钮，所以直接覆盖没关系）
+  grid.innerHTML = `
+    <p class="tip">${cat}：拍照，或从相册选择</p>
+    <div class="src-row">
+      <button onclick="openCamera()">拍照</button>
+      <button onclick="openAlbum()">相册选</button>
+    </div>
+    <div class="src-row" style="margin-top:10px">
+      <button onclick="renderCategories()" style="background:#666">返回</button>
+    </div>`;
+}
 
-  // 开"只读事务"，拿到表
-  const store = db.transaction('notes', 'readonly').objectStore('notes');
+// 调起相机：触发隐藏的 input，浏览器会自动弹出相机
+function openCamera() {
+  document.getElementById('cameraInput').click();
+}
 
-  // openCursor()：游标，一条一条遍历记录（IndexedDB 的标准姿势）
-  store.openCursor().onsuccess = e => {
-    const cur = e.target.result;   // 当前这条
-    if (cur) {
-      // 造一个 <li>，塞进文字，挂到列表里
-      const li = document.createElement('li');
-      li.textContent = cur.value.text;
-      out.appendChild(li);
-      cur.continue();  // 游标移到下一条，直到没有（if 不成立）为止
-    }
-  };
+// 调起相册
+function openAlbum() {
+  document.getElementById('albumInput').click();
+}
+
+// ===== 用户选完图后触发（onchange 在 HTML 里绑） =====
+function onFileChosen(event) {
+  const file = event.target.files[0];   // 拿到选中的图片文件
+  if (!file) return;
+
+  currentPhoto = file;
+  // 用本地临时 URL 显示预览（不需要上传，浏览器自己能显示本地文件）
+  document.getElementById('previewImg').src = URL.createObjectURL(file);
+  document.getElementById('preview').classList.remove('hidden');
+
+  event.target.value = '';  // 清空 input，否则连选两次同一张图不触发 onchange
+}
+
+// 预览页：返回首页
+function backHome() {
+  document.getElementById('preview').classList.add('hidden');
+  renderCategories();
+}
+
+// 预览页：确认（存储功能下一个任务才做，这里先占位）
+function confirmPhoto() {
+  console.log('已确认：', currentCategory, currentPhoto);
+  backHome();
 }
