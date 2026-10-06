@@ -2,7 +2,7 @@
 // 它是个"后台代理"：网页发请求时先问它，它说"我这儿有缓存"就直接给缓存
 // 效果：断网也能打开页面（骨架阶段先缓存文件本身，以后衣服图片也走这条路）
 
-const CACHE = 'closet-v1';  // 缓存的名字，以后更新版本就改 v2、v3
+const CACHE = 'closet-v2';  // 缓存的名字，以后更新版本就改 v2、v3
 
 // 安装时要缓存的文件清单（都是本项目的文件）
 const FILES = ['.', 'index.html', 'app.js', 'style.css', 'manifest.json', 'icon.png'];
