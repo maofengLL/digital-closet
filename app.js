@@ -183,11 +183,13 @@ function renderWardrobe(tab) {
       const item = cur.value;
       if (tab === '全部' || item.category === tab) {
         count++;
-        const div = document.createElement('div');
+               const div = document.createElement('div');
         div.className = 'thumb';
         const img = document.createElement('img');
         img.src = URL.createObjectURL(item.image);
         div.appendChild(img);
+        // 点一下 = 打开大图；长按 = 快捷删除
+        div.addEventListener('click', () => openDetail(cur.key, item.image));
         bindLongPress(div, () => deleteCloth(cur.key));
         grid.appendChild(div);
       }
@@ -203,6 +205,26 @@ function deleteCloth(id) {
   const tx = db.transaction('clothes', 'readwrite');
   tx.objectStore('clothes').delete(id);
   tx.oncomplete = () => renderWardrobe(currentTab);
+}
+// ========== 大图查看层 ==========
+let currentViewId = null;   // 当前正在看哪件衣服
+
+function openDetail(id, image) {
+  currentViewId = id;
+  document.getElementById('detailImg').src = URL.createObjectURL(image);
+  document.getElementById('detail').classList.remove('hidden');
+}
+
+function closeDetail() {
+  currentViewId = null;
+  document.getElementById('detail').classList.add('hidden');
+}
+
+// 在大图里删除当前这件
+function deleteCurrent() {
+  if (currentViewId === null) return;
+  deleteCloth(currentViewId);   // 复用已有的删除逻辑（自带确认弹窗）
+  closeDetail();
 }
 
 // 长按 600 毫秒触发；电脑上用右键代替
