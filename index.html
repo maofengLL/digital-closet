@@ -1,41 +1,38 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <!-- 元信息：字符集必须是 UTF-8，否则中文乱码 -->
   <meta charset="UTF-8">
-  <!-- 适配手机屏幕：宽度=设备宽度，禁止用户手动缩放 -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- 浏览器顶栏颜色 -->
   <meta name="theme-color" content="#ffffff">
-  <!-- PWA 配置：告诉浏览器"这是个可安装的应用" -->
   <link rel="manifest" href="manifest.json">
-  <!-- 样式表 -->
   <link rel="stylesheet" href="style.css">
   <title>数字衣柜</title>
 </head>
 <body>
-  <!-- 顶部标题栏 -->
   <header>数字衣柜</header>
 
-  <main>
-    <!-- 提示语：骨架阶段只是测试，后面会删掉 -->
-    <p class="tip">骨架测试：能存住文字，地基就打好了</p>
-
-    <!-- 输入区：一个输入框 + 一个按钮，flex 布局并排 -->
-    <div class="input-row">
-      <input id="note" placeholder="输入一句话试试">
-      <!-- onclick="saveNote()"：点按钮时，去 app.js 里找 saveNote 这个函数执行 -->
-      <button onclick="saveNote()">存</button>
-    </div>
-
-    <!-- 存放历史记录的列表，内容由 app.js 动态填入 -->
-    <ul id="list"></ul>
+  <main id="home">
+    <p class="tip">选择要录入的衣服类别</p>
+    <!-- 品类按钮由 app.js 动态生成，这里只留一个空容器 -->
+    <div id="catGrid" class="cat-grid"></div>
   </main>
 
-  <!-- 主逻辑 -->
+  <!-- 隐藏的输入框：调起相机和相册全靠它 -->
+  <!-- capture="environment" 表示调起后置摄像头（安卓直接开相机；iOS 行为不定，所以两条路都留） -->
+  <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
+  <input type="file" id="albumInput" accept="image/*" style="display:none">
+
+  <!-- 拍照后的预览层，默认隐藏 -->
+  <div id="preview" class="preview hidden">
+    <img id="previewImg" alt="衣服照片">
+    <div class="preview-bar">
+      <button onclick="backHome()">重选</button>
+      <button class="primary" onclick="confirmPhoto()">确认（存储下一步做）</button>
+    </div>
+  </div>
+
   <script src="app.js"></script>
   <script>
-    // 如果浏览器支持 Service Worker，就注册它（离线功能的关键）
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   </script>
 </body>
