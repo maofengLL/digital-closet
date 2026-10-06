@@ -35,11 +35,11 @@
   <input type="file" id="albumInput" accept="image/*" style="display:none" onchange="onFileChosen(event)">
 
   <!-- 拍照预览层 -->
-  <div id="preview" class="preview hidden">
-    <img id="previewImg" alt="衣服照片">
     <div class="preview-bar">
-      <button onclick="backHome()">重选</button>
-      <button class="primary" onclick="confirmPhoto()">确认</button>
+      <button onclick="openCamera()">重拍</button>
+      <button onclick="openAlbum()">换一张</button>
+      <button onclick="backHome()">返回</button>
+      <button class="primary" id="confirmBtn" onclick="confirmPhoto()">确认</button>
     </div>
   </div>
 
