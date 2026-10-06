@@ -34,6 +34,7 @@ button { font-family: inherit; -webkit-appearance: none; appearance: none; }
 .preview-bar { display: flex; gap: 10px; padding: 16px; }
 .preview-bar button { flex: 1; padding: 14px 0; font-size: 15px; border: none; border-radius: 10px; background: #444; color: #fff; }
 .preview-bar .primary { background: #2B2B2B; }
+.preview-bar .danger { background: #B4432F; }
 
 /* 底部导航 */
 .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: #fff; border-top: 1px solid #E5E2DA; }
