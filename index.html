@@ -9,15 +9,25 @@
   <title>数字衣柜</title>
 </head>
 <body>
-  <header>数字衣柜</header>
+  <!-- 顶栏：标题 + 返回键（返回键平时隐藏，进品类页才出现） -->
+  <header>
+    <button id="backBtn" class="back-btn hidden" onclick="onBack()">←</button>
+    <span>数字衣柜</span>
+  </header>
 
-  <!-- 视图1：录入 -->
+  <!-- 页面1：首页（选品类） -->
   <main id="homeView">
     <p class="tip">选择要录入的衣服类别</p>
     <div id="catGrid" class="cat-grid"></div>
   </main>
 
-  <!-- 视图2：衣柜（默认隐藏） -->
+  <!-- 页面2：品类页（一个"录入"按钮） -->
+  <main id="categoryView" class="hidden">
+    <p class="tip" id="categoryTip"></p>
+    <div id="categoryActions"></div>
+  </main>
+
+  <!-- 页面3：衣柜 -->
   <main id="wardrobeView" class="hidden">
     <div id="wardrobeTabs" class="tabs"></div>
     <div id="wardrobeGrid" class="wardrobe-grid"></div>
@@ -34,12 +44,14 @@
   <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="onFileChosen(event)">
   <input type="file" id="albumInput" accept="image/*" style="display:none" onchange="onFileChosen(event)">
 
-  <!-- 拍照预览层 -->
+  <!-- 预览层：全屏覆盖，返回键在左上角 -->
+  <div id="preview" class="preview hidden">
+    <button class="preview-back" onclick="exitPreview()">←</button>
+    <img id="previewImg" alt="衣服照片">
     <div class="preview-bar">
-      <button onclick="openCamera()">重拍</button>
-      <button onclick="openAlbum()">换一张</button>
-      <button onclick="backHome()">返回</button>
-      <button class="primary" id="confirmBtn" onclick="confirmPhoto()">确认</button>
+      <button onclick="reenter()">重新录入</button>
+      <button onclick="saveAndNext()">下一张</button>
+      <button class="primary" id="confirmBtn" onclick="saveAndExit()">确认</button>
     </div>
   </div>
 
