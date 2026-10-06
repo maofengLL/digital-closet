@@ -1,9 +1,8 @@
-// ========== 数字衣柜 · 录入 + 衣柜浏览 ==========
+// ========== 数字衣柜 · 页面状态机 ==========
+// 页面只有四种：home / category / wardrobe，preview 是覆盖层
+// 返回键的行为由"当前页面"决定
 
-// ---------- 数据层：IndexedDB ----------
 let db;
-// 版本升到 2：新增 clothes 表（存衣服照片+分类）
-// 旧的 notes 表会原样保留，不用管
 const dbReq = indexedDB.open('closet-db', 2);
 dbReq.onupgradeneeded = e => {
   const d = e.target.result;
@@ -14,25 +13,46 @@ dbReq.onupgradeneeded = e => {
 dbReq.onsuccess = e => { db = e.target.result; };
 dbReq.onerror = () => alert('数据库打开失败，请换 Chrome 浏览器');
 
-// ---------- 视图切换 ----------
-function switchView(name) {
-  document.getElementById('homeView').classList.toggle('hidden', name !== 'home');
-  document.getElementById('wardrobeView').classList.toggle('hidden', name !== 'wardrobe');
-  document.getElementById('navHome').classList.toggle('active', name === 'home');
-  document.getElementById('navWardrobe').classList.toggle('active', name === 'wardrobe');
-  if (name === 'wardrobe') renderWardrobe(currentTab);  // 每次进衣柜都刷新
-}
-
-// ---------- 录入流程 ----------
 const CATEGORIES = ['上装', '裤装', '裙装', '外套', '鞋', '配饰', '其他'];
 let currentCategory = '';
 let currentPhoto = null;
+let currentPage = 'home';
 
 window.onload = () => {
   renderCategories();
   renderWardrobeTabs();
+  showPage('home');
 };
 
+// ---------- 页面切换 ----------
+function showPage(name) {
+  currentPage = name;
+  document.getElementById('homeView').classList.toggle('hidden', name !== 'home');
+  document.getElementById('categoryView').classList.toggle('hidden', name !== 'category');
+  document.getElementById('wardrobeView').classList.toggle('hidden', name !== 'wardrobe');
+  // 只有品类页显示左上角返回键
+  document.getElementById('backBtn').classList.toggle('hidden', name !== 'category');
+  // 底部导航高亮
+  document.getElementById('navHome').classList.toggle('active', name !== 'wardrobe');
+  document.getElementById('navWardrobe').classList.toggle('active', name === 'wardrobe');
+}
+
+// 底部导航
+function switchView(name) {
+  if (name === 'wardrobe') {
+    showPage('wardrobe');
+    renderWardrobe(currentTab);
+  } else {
+    showPage('home');
+  }
+}
+
+// 左上角返回键：品类页 → 回首页
+function onBack() {
+  if (currentPage === 'category') showPage('home');
+}
+
+// ---------- 首页：品类按钮 ----------
 function renderCategories() {
   const grid = document.getElementById('catGrid');
   grid.innerHTML = '';
@@ -40,22 +60,31 @@ function renderCategories() {
     const btn = document.createElement('button');
     btn.className = 'cat-btn';
     btn.textContent = cat;
-    btn.onclick = () => askSource(cat);
+    btn.onclick = () => openCategory(cat);
     grid.appendChild(btn);
   });
 }
 
-function askSource(cat) {
+// ---------- 品类页 ----------
+function openCategory(cat) {
   currentCategory = cat;
-  document.getElementById('catGrid').innerHTML = `
-    <p class="tip">${cat}：拍照，或从相册选择</p>
-    <div class="src-row">
-      <button onclick="openCamera()">拍照</button>
-      <button onclick="openAlbum()">相册选</button>
-    </div>
-    <div class="src-row" style="margin-top:10px">
-      <button onclick="renderCategories()" style="background:#666">返回</button>
-    </div>`;
+  document.getElementById('categoryTip').textContent = '类别：' + cat;
+  renderCategoryActions('main');
+  showPage('category');
+}
+
+// 品类页两种状态：'main' 显示录入按钮；'source' 显示拍照/相册选
+function renderCategoryActions(mode) {
+  const box = document.getElementById('categoryActions');
+  if (mode === 'main') {
+    box.innerHTML = `<button class="big-btn" onclick="renderCategoryActions('source')">录入</button>`;
+  } else {
+    box.innerHTML = `
+      <div class="src-row">
+        <button onclick="openCamera()">拍照</button>
+        <button onclick="openAlbum()">相册选</button>
+      </div>`;
+  }
 }
 
 function openCamera() { document.getElementById('cameraInput').click(); }
@@ -70,20 +99,26 @@ function onFileChosen(event) {
   event.target.value = '';
 }
 
-function backHome() {
+// ---------- 预览层 ----------
+// 左上角 ←：放弃，回首页
+function exitPreview() {
+  currentPhoto = null;
   document.getElementById('preview').classList.add('hidden');
-  renderCategories();
+  showPage('home');
 }
 
-// 确认：存进数据库（带状态反馈和错误提示，出了问题会弹窗告诉我们）
-function confirmPhoto() {
+// 重新录入：放弃这张，回品类页重选来源
+function reenter() {
+  currentPhoto = null;
+  document.getElementById('preview').classList.add('hidden');
+  renderCategoryActions('source');
+  showPage('category');
+}
+
+// 保存核心（三个按钮共用）：成功就执行 done()
+function saveCurrent(done) {
   if (!currentPhoto) { alert('请先选择照片'); return; }
   if (!db) { alert('数据库还没准备好，请等一秒再点'); return; }
-
-  const btn = document.getElementById('confirmBtn');
-  btn.textContent = '保存中…';
-  btn.disabled = true;
-
   try {
     const tx = db.transaction('clothes', 'readwrite');
     tx.objectStore('clothes').add({
@@ -91,26 +126,31 @@ function confirmPhoto() {
       category: currentCategory,
       time: Date.now()
     });
-    tx.oncomplete = () => {
-      currentPhoto = null;
-      btn.textContent = '确认';
-      btn.disabled = false;
-      backHome();
-    };
-    tx.onerror = () => {
-      alert('保存失败：' + tx.error.message);
-      btn.textContent = '确认';
-      btn.disabled = false;
-    };
+    tx.oncomplete = () => { currentPhoto = null; done(); };
+    tx.onerror = () => alert('保存失败：' + tx.error.message);
   } catch (err) {
     alert('出错了：' + err.message);
-    btn.textContent = '确认';
-    btn.disabled = false;
   }
 }
 
+// 确认：保存并回首页
+function saveAndExit() {
+  saveCurrent(() => {
+    document.getElementById('preview').classList.add('hidden');
+    showPage('home');
+  });
+}
 
-// ---------- 衣柜浏览 ----------
+// 下一张：保存这件，回到品类页接着录（批量录入）
+function saveAndNext() {
+  saveCurrent(() => {
+    document.getElementById('preview').classList.add('hidden');
+    renderCategoryActions('source');
+    showPage('category');
+  });
+}
+
+// ---------- 衣柜 ----------
 const TABS = ['全部', ...CATEGORIES];
 let currentTab = '全部';
 
@@ -129,15 +169,12 @@ function renderWardrobeTabs() {
 
 function renderWardrobe(tab) {
   currentTab = tab;
-  // 高亮当前 Tab
   document.querySelectorAll('.tab').forEach(b => {
     b.classList.toggle('active', b.dataset.name === tab);
   });
-
   const grid = document.getElementById('wardrobeGrid');
   grid.innerHTML = '';
   const emptyTip = document.getElementById('emptyTip');
-
   let count = 0;
   const store = db.transaction('clothes', 'readonly').objectStore('clothes');
   store.openCursor().onsuccess = e => {
@@ -149,31 +186,30 @@ function renderWardrobe(tab) {
         const div = document.createElement('div');
         div.className = 'thumb';
         const img = document.createElement('img');
-        img.src = URL.createObjectURL(item.image);  // Blob → 临时网址直接显示
+        img.src = URL.createObjectURL(item.image);
         div.appendChild(img);
         bindLongPress(div, () => deleteCloth(cur.key));
         grid.appendChild(div);
       }
       cur.continue();
     } else {
-      emptyTip.classList.toggle('hidden', count > 0);  // 没衣服时显示提示
+      emptyTip.classList.toggle('hidden', count > 0);
     }
   };
 }
 
 function deleteCloth(id) {
-  if (!confirm('确定删除这件衣服吗？')) return;   // 二次确认，防误删
+  if (!confirm('确定删除这件衣服吗？')) return;
   const tx = db.transaction('clothes', 'readwrite');
   tx.objectStore('clothes').delete(id);
   tx.oncomplete = () => renderWardrobe(currentTab);
 }
 
-// 长按识别：按住 600 毫秒触发（手机上）
-// 电脑上调试时用鼠标右键代替长按
+// 长按 600 毫秒触发；电脑上用右键代替
 function bindLongPress(el, fn) {
   let timer = null;
   el.addEventListener('touchstart', () => { timer = setTimeout(fn, 600); });
   el.addEventListener('touchend', () => clearTimeout(timer));
-  el.addEventListener('touchmove', () => clearTimeout(timer));  // 滑动取消，防误触
+  el.addEventListener('touchmove', () => clearTimeout(timer));
   el.addEventListener('contextmenu', e => { e.preventDefault(); fn(); });
 }
