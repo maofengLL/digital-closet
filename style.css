@@ -16,7 +16,11 @@ header {
 main { padding: 16px; }
 .tip { font-size: 13px; color: #8A867D; margin-bottom: 12px; }
 .tip.center { text-align: center; margin-top: 40px; }  /* 空衣柜提示专用 */
-button { font-family: inherit; }   /* 按钮文字跟随页面字体 */
+button {
+  font-family: inherit;
+  -webkit-appearance: none;   /* 剥掉手机浏览器强加的默认按钮皮肤 */
+  appearance: none;
+}
 .hidden { display: none; }
 
 /* ===== 录入页：品类按钮 ===== */
