@@ -19,16 +19,7 @@ let currentPhoto = null;
 let currentChip = '全部';
 let addCategory = '';
 let allItems = [];
-// ---------- 轮廓剪影：每个品类一张半透明 SVG，叠加在拍照预览上 ----------
-const SILHOUETTES = {
-  '上装': '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M30 30 L40 23 Q50 29 60 23 L70 30 L82 46 L73 52 L71 46 L71 82 L29 82 L29 46 L27 52 L18 46 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5" stroke-linejoin="round"/></svg>',
-  '裤装': '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M32 18 L68 18 L73 82 L56 82 L50 42 L44 82 L27 82 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5" stroke-linejoin="round"/></svg>',
-  '裙装': '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M34 22 L66 22 L80 80 L20 80 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5" stroke-linejoin="round"/><line x1="34" y1="30" x2="66" y2="30" stroke="#fff" stroke-opacity=".85" stroke-width="2.5"/></svg>',
-  '外套': '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M30 30 L40 22 L50 29 L60 22 L70 30 L83 48 L74 54 L72 47 L72 83 L28 83 L28 47 L26 54 L17 48 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5" stroke-linejoin="round"/><line x1="50" y1="31" x2="50" y2="83" stroke="#fff" stroke-opacity=".85" stroke-width="2.5"/></svg>',
-  '鞋':   '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M16 66 L16 62 Q16 54 26 54 L44 54 Q53 54 58 47 L66 54 Q82 57 84 66 L84 70 L16 70 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5" stroke-linejoin="round"/></svg>',
-  '配饰': '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M26 56 Q26 30 50 30 Q74 30 74 56 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5"/><path d="M18 58 L82 58 Q86 58 86 62 L86 64 L14 64 L14 62 Q14 58 18 58 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5"/></svg>',
-  '其他': '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="26" y="26" width="48" height="48" rx="10" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5" stroke-dasharray="6 5"/></svg>'
-};
+
 
 // 应用启动入口（由数据库开门成功后调用，见 dbReq.onsuccess）
 function startApp() {
@@ -36,6 +27,53 @@ function startApp() {
   renderApp();
 }
 
+// ---------- 拍照贴士卡片（双形态） ----------
+const TIP_KEY_DISMISSED = 'tipAutoDismissed';   // 勾选过"不再提醒"
+const TIP_KEY_COUNT = 'tipAutoCount';           // 自动弹出次数（满3次不再弹）
+let tipMode = 'auto';        // 'auto'=拍照前自动弹  'manual'=点"?"打开
+let tipChecked = false;      // 小圆圈是否勾选
+let pendingPick = null;      // A形态点"知道了"后要继续的拍照动作
+
+function shouldAutoTip() {
+  if (localStorage.getItem(TIP_KEY_DISMISSED)) return false;
+  const n = parseInt(localStorage.getItem(TIP_KEY_COUNT) || '0', 10);
+  return n < 3;
+}
+
+function openTip(mode) {
+  tipMode = mode;
+  tipChecked = false;
+  // A形态显示第4句+圆圈；B形态隐藏（卡片相应变矮，不留空）
+  document.getElementById('tipDismissRow').classList.toggle('hidden', mode !== 'auto');
+  document.getElementById('tipCircle').classList.remove('checked');
+  document.getElementById('tipMask').classList.remove('hidden');
+}
+
+function toggleTipCircle() {
+  tipChecked = !tipChecked;
+  document.getElementById('tipCircle').classList.toggle('checked', tipChecked);
+}
+
+function closeTip() {
+  document.getElementById('tipMask').classList.add('hidden');
+
+  if (tipMode === 'auto') {
+    if (tipChecked) {
+      localStorage.setItem(TIP_KEY_DISMISSED, '1');
+    } else {
+      const n = parseInt(localStorage.getItem(TIP_KEY_COUNT) || '0', 10) + 1;
+      localStorage.setItem(TIP_KEY_COUNT, String(n));
+    }
+    // manual 形态：不写任何标记、不计数
+  }
+
+  // A形态关闭后继续被拦下的拍照动作
+  if (pendingPick) {
+    const s = pendingPick;
+    pendingPick = null;
+    doPick(s);
+  }
+}
 // ---------- 轻提示 toast：一闪而过的小字 ----------
 let toastTimer = null;
 function showToast(text) {
@@ -194,6 +232,17 @@ function closeSheet() {
 function pickFrom(src) {
   if (!addCategory) { alert('先选一个品类'); return; }
   closeSheet();
+  // 贴士关卡：该自动弹且没弹满3次 → 先弹A形态，点"知道了"后再真正打开相机
+  if (shouldAutoTip()) {
+    pendingPick = src;
+    openTip('auto');
+    return;
+  }
+  doPick(src);
+}
+
+// 真正调起相机/相册
+function doPick(src) {
   showToast(src === 'camera' ? '正在打开相机…' : '正在打开相册…');
   if (src === 'camera') document.getElementById('cameraInput').click();
   else document.getElementById('albumInput').click();
@@ -205,8 +254,6 @@ function onFileChosen(event) {
   showToast('正在读取照片…');
   currentPhoto = file;
   document.getElementById('previewImg').src = URL.createObjectURL(file);
-  // 叠上该品类的轮廓剪影（引导用户对齐，不拦截）
-  document.getElementById('outline').innerHTML = SILHOUETTES[addCategory] || '';
   document.getElementById('preview').classList.remove('hidden');
   event.target.value = '';
 }
