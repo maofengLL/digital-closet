@@ -5,31 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
   <title>数字衣柜</title>
 </head>
 <body>
+  <!-- 顶栏：标题 + 总数 -->
   <header>
-    <button id="backBtn" class="back-btn hidden" onclick="onBack()">←</button>
-    <span>数字衣柜</span>
+    <span>我的衣柜 · 共<span id="totalCount">0</span>件</span>
   </header>
 
-  <!-- 页面1：衣柜首页 = 七个大按钮 -->
-  <main id="homeView">
-    <p class="tip">你的衣柜</p>
-    <div id="catGrid" class="cat-grid"></div>
-  </main>
-
-  <!-- 页面2：浏览页（分组列表 / 单品类网格） -->
-  <main id="browseView" class="hidden">
+  <!-- 唯一页面：抽屉柜 -->
+  <main>
+    <!-- 筛选 chips -->
     <div id="chipRow" class="tabs"></div>
+    <!-- 筛选提示：只显示某抽屉时出现 -->
+    <p id="filterHint" class="filter-hint hidden"></p>
+
+    <!-- 全部：抽屉区块堆叠 -->
     <div id="blocksBox"></div>
+    <!-- 单品类：大图网格 -->
     <div id="gridBox" class="wardrobe-grid hidden"></div>
+    <!-- 单品类空态 -->
     <p id="emptyTip" class="tip center hidden"></p>
+
+    <!-- 页脚提示 -->
+    <p id="footerHint" class="footer-hint">↓ 滚动，拉开下面的抽屉</p>
   </main>
 
-  <!-- 悬浮加号：录入入口，仅浏览页显示 -->
-  <button id="fab" class="fab hidden" onclick="openSheet()">＋</button>
+  <!-- FAB -->
+  <button id="fab" class="fab" onclick="openSheet()">＋</button>
 
   <!-- 底部动作面板 -->
   <div id="sheet" class="sheet-mask hidden" onclick="closeSheet()">
@@ -41,11 +45,6 @@
     </div>
   </div>
 
-  <!-- 底部导航：只有一个"衣柜" -->
-  <nav class="bottom-nav">
-    <button class="active" onclick="goHome()">衣柜</button>
-  </nav>
-
   <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="onFileChosen(event)">
   <input type="file" id="albumInput" accept="image/*" style="display:none" onchange="onFileChosen(event)">
 
@@ -56,7 +55,7 @@
     <div class="preview-bar">
       <button onclick="reenter()">重新录入</button>
       <button onclick="saveAndNext()">下一张</button>
-      <button class="primary" onclick="saveAndExit()">确认</button>
+      <button class="primary" id="confirmBtn" onclick="saveAndExit()">确认</button>
     </div>
   </div>
 
@@ -70,7 +69,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   </script>
