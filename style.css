@@ -4,19 +4,14 @@ header { display: flex; align-items: center; padding: 14px 16px; font-size: 18px
 .back-btn { background: none; border: none; font-size: 20px; color: #2B2B2B; padding-right: 8px; }
 main { padding: 16px; }
 .tip { font-size: 13px; color: #8A867D; margin-bottom: 12px; }
-.tip.center { text-align: center; margin-top: 40px; }
+.tip.center { text-align: center; margin-top: 40px; line-height: 22px; }
 button { font-family: inherit; -webkit-appearance: none; appearance: none; }
-.hidden { display: none !important; }   /* !important = 隐藏优先级最高，谁都别想覆盖 */
+.hidden { display: none !important; }
 
 /* 首页品类 */
 .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .cat-btn { padding: 28px 0; font-size: 17px; color: #2B2B2B; background: #fff; border: 1px solid #E5E2DA; border-radius: 12px; }
 .cat-btn:active { background: #EFEBE2; }
-
-/* 品类页 */
-.big-btn { width: 100%; padding: 26px 0; font-size: 18px; background: #2B2B2B; color: #fff; border: none; border-radius: 12px; }
-.src-row { display: flex; gap: 10px; }
-.src-row button { flex: 1; padding: 22px 0; font-size: 16px; background: #2B2B2B; color: #fff; border: none; border-radius: 12px; }
 
 /* 衣柜 */
 .tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; }
@@ -26,10 +21,45 @@ button { font-family: inherit; -webkit-appearance: none; appearance: none; }
 .thumb { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid #E5E2DA; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-/* 预览层 */
+/* 悬浮加号 FAB */
+.fab {
+  position: fixed;
+  right: 16px; bottom: 76px;      /* 底部导航上方 */
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: #2B2B2B; color: #fff;
+  font-size: 28px; border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  z-index: 5;
+}
+
+/* 底部动作面板 */
+.sheet-mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 20; }
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  padding: 16px 16px 24px;
+}
+.sheet-btn {
+  display: block; width: 100%;
+  padding: 16px 0; margin-top: 8px;
+  font-size: 16px; color: #2B2B2B;
+  background: #F3F1EA; border: none; border-radius: 12px;
+}
+.sheet-btn.cancel { color: #8A867D; }
+.sheet-cats { margin-bottom: 8px; }
+.sheet-cats .tip { margin-bottom: 8px; }
+.chip {
+  padding: 8px 14px; margin: 0 6px 6px 0;
+  font-size: 14px; color: #2B2B2B;
+  background: #fff; border: 1px solid #E5E2DA; border-radius: 999px;
+}
+.chip.active { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
+
+/* 预览层 / 大图层 */
 .preview { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; z-index: 10; }
 .preview img { flex: 1; object-fit: contain; width: 100%; }
-/* 左上角圆形返回键 */
 .preview-back { position: absolute; top: 12px; left: 12px; z-index: 11; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,.5); color: #fff; font-size: 20px; border: none; }
 .preview-bar { display: flex; gap: 10px; padding: 16px; }
 .preview-bar button { flex: 1; padding: 14px 0; font-size: 15px; border: none; border-radius: 10px; background: #444; color: #fff; }
