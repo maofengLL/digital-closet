@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
   <title>数字衣柜</title>
 </head>
 <body>
@@ -52,6 +52,7 @@
   <div id="preview" class="preview hidden">
     <button class="preview-back" onclick="exitPreview()">←</button>
     <img id="previewImg" alt="衣服照片">
+        <div id="outline" class="outline"></div>
     <div class="preview-bar">
       <button onclick="reenter()">重新录入</button>
       <button onclick="saveAndNext()">下一张</button>
@@ -70,7 +71,7 @@
   </div>
 
   <div id="toast" class="toast hidden"></div> 
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   </script>
