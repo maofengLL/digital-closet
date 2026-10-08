@@ -1,5 +1,4 @@
-// ========== 数字衣柜 · 单页结构 ==========
-// 只有一个页面：衣柜。Tab=过滤，加号=录入，没有页面跳转。
+// ========== 数字衣柜 · 首页（大按钮）+ 浏览页（分组列表/网格） ==========
 
 let db;
 const dbReq = indexedDB.open('closet-db', 2);
@@ -14,74 +13,164 @@ dbReq.onerror = () => alert('数据库打开失败，请换 Chrome 浏览器');
 
 const CATEGORIES = ['上装', '裤装', '裙装', '外套', '鞋', '配饰', '其他'];
 let currentPhoto = null;
-let currentTab = '全部';     // 当前过滤品类
-let addCategory = '';        // 本次录入品类（从当前过滤继承）
+let currentChip = '全部';    // 浏览页当前的筛选
+let addCategory = '';        // 本次录入品类（继承当前筛选）
+let allItems = [];           // 渲染前全量加载的衣服
 
 window.onload = () => {
-  renderWardrobeTabs();
-  renderWardrobe();
+  renderHome();
+  renderChips();
+  showPage('home');
 };
 
-// ---------- 衣柜浏览（唯一的页面内容） ----------
-const TABS = ['全部', ...CATEGORIES];
+// ---------- 页面切换 ----------
+function showPage(name) {
+  document.getElementById('homeView').classList.toggle('hidden', name !== 'home');
+  document.getElementById('browseView').classList.toggle('hidden', name !== 'browse');
+  document.getElementById('backBtn').classList.toggle('hidden', name !== 'browse');
+  document.getElementById('fab').classList.toggle('hidden', name !== 'browse');
+}
 
-function renderWardrobeTabs() {
-  const box = document.getElementById('wardrobeTabs');
+function goHome() { showPage('home'); }
+function onBack() { showPage('home'); }
+
+// ---------- 首页：七个大按钮 ----------
+function renderHome() {
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn';
+    btn.textContent = cat;
+    btn.onclick = () => openCategory(cat);
+    grid.appendChild(btn);
+  });
+}
+
+// ---------- 浏览页 ----------
+function openCategory(cat) {
+  currentChip = cat;
+  showPage('browse');
+  renderBrowse();
+}
+
+// 全量加载后渲染
+function loadAll(cb) {
+  allItems = [];
+  const store = db.transaction('clothes', 'readonly').objectStore('clothes');
+  store.openCursor().onsuccess = e => {
+    const cur = e.target.result;
+    if (cur) { allItems.push(cur.value); cur.continue(); }
+    else cb();
+  };
+}
+
+// 顶部筛选 chips
+function renderChips() {
+  const box = document.getElementById('chipRow');
   box.innerHTML = '';
-  TABS.forEach(t => {
+  ['全部', ...CATEGORIES].forEach(t => {
     const b = document.createElement('button');
     b.className = 'tab';
     b.textContent = t;
     b.dataset.name = t;
-    b.onclick = () => { currentTab = t; renderWardrobe(); };
+    b.onclick = () => { currentChip = t; renderBrowse(); };
     box.appendChild(b);
   });
 }
 
-function renderWardrobe() {
-  document.querySelectorAll('.tab').forEach(b => {
-    b.classList.toggle('active', b.dataset.name === currentTab);
+function renderBrowse() {
+  // chip 高亮
+  document.querySelectorAll('#chipRow .tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.name === currentChip);
   });
+  loadAll(() => {
+    if (currentChip === '全部') renderBlocks();
+    else renderGrid(currentChip);
+  });
+}
 
-  const grid = document.getElementById('wardrobeGrid');
-  grid.innerHTML = '';
+// 全部模式：按品类分区块纵向堆叠
+function renderBlocks() {
+  const blocksBox = document.getElementById('blocksBox');
+  const gridBox = document.getElementById('gridBox');
   const emptyTip = document.getElementById('emptyTip');
-  let count = 0;
+  blocksBox.classList.remove('hidden');
+  gridBox.classList.add('hidden');
+  emptyTip.classList.add('hidden');
+  blocksBox.innerHTML = '';
 
-  const store = db.transaction('clothes', 'readonly').objectStore('clothes');
-  store.openCursor().onsuccess = e => {
-    const cur = e.target.result;
-    if (cur) {
-      const item = cur.value;
-      if (currentTab === '全部' || item.category === currentTab) {
-        count++;
-        const div = document.createElement('div');
-        div.className = 'thumb';
+  CATEGORIES.forEach(cat => {
+    const items = allItems.filter(i => i.category === cat);
+
+    const sec = document.createElement('div');
+    sec.className = 'section';
+
+    // 区块头：品类名（左）+ 件数（右）+ 分隔线
+    const head = document.createElement('div');
+    head.className = 'section-head';
+    head.innerHTML = `<span class="name">${cat}</span><span class="count">${items.length} 件</span>`;
+    sec.appendChild(head);
+
+    if (items.length === 0) {
+      // 空区块：头部 + 一行轻提示
+      const p = document.createElement('p');
+      p.className = 'block-empty';
+      p.textContent = `这个格子还空着，点右下角加号，把第一件${cat}拍进来`;
+      sec.appendChild(p);
+    } else {
+      // 区块体：横向缩略图，限一行，超出横滑
+      const row = document.createElement('div');
+      row.className = 'hrow';
+      items.forEach(item => {
+        const d = document.createElement('div');
+        d.className = 'hthumb';
         const img = document.createElement('img');
         img.src = URL.createObjectURL(item.image);
-        div.appendChild(img);
-        div.addEventListener('click', () => openDetail(cur.key, item.image));
-        bindLongPress(div, () => deleteCloth(cur.key));
-        grid.appendChild(div);
-      }
-      cur.continue();
-    } else {
-      if (count === 0) {
-        emptyTip.textContent = currentTab === '全部'
-          ? '这里还空着，点右下角加号，把第一件衣服拍进来'
-          : `这里还空着，点右下角加号，把第一件${currentTab}拍进来`;
-        emptyTip.classList.remove('hidden');
-      } else {
-        emptyTip.classList.add('hidden');
-      }
+        d.appendChild(img);
+        d.addEventListener('click', () => openDetail(item.id, item.image));
+        bindLongPress(d, () => deleteCloth(item.id));
+        row.appendChild(d);
+      });
+      sec.appendChild(row);
     }
-  };
+    blocksBox.appendChild(sec);
+  });
+}
+
+// 单品类模式：大图网格铺满
+function renderGrid(cat) {
+  const blocksBox = document.getElementById('blocksBox');
+  const gridBox = document.getElementById('gridBox');
+  const emptyTip = document.getElementById('emptyTip');
+  blocksBox.classList.add('hidden');
+  gridBox.classList.remove('hidden');
+  gridBox.innerHTML = '';
+
+  const items = allItems.filter(i => i.category === cat);
+  if (items.length === 0) {
+    gridBox.classList.add('hidden');
+    emptyTip.textContent = `这里还空着，点右下角加号，把第一件${cat}拍进来`;
+    emptyTip.classList.remove('hidden');
+    return;
+  }
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'thumb';
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(item.image);
+    div.appendChild(img);
+    div.addEventListener('click', () => openDetail(item.id, item.image));
+    bindLongPress(div, () => deleteCloth(item.id));
+    gridBox.appendChild(div);
+  });
 }
 
 // ---------- 悬浮加号 → 动作面板 ----------
 function openSheet() {
   const catsBox = document.getElementById('sheetCats');
-  if (currentTab === '全部') {
+  if (currentChip === '全部') {
+    // 筛选是"全部"时品类未知：给一排小标签手选，预选上次用过的
     catsBox.classList.remove('hidden');
     catsBox.innerHTML = '<p class="tip">这件属于哪类？</p>';
     if (!addCategory) addCategory = CATEGORIES[0];
@@ -96,7 +185,7 @@ function openSheet() {
       catsBox.appendChild(chip);
     });
   } else {
-    addCategory = currentTab;   // 品类继承
+    addCategory = currentChip;   // 品类继承
     catsBox.classList.add('hidden');
   }
   document.getElementById('sheet').classList.remove('hidden');
@@ -123,13 +212,11 @@ function onFileChosen(event) {
 }
 
 // ---------- 预览层 ----------
-// 放弃：关掉预览回衣柜
 function exitPreview() {
   currentPhoto = null;
   document.getElementById('preview').classList.add('hidden');
 }
 
-// 重新录入：回动作面板重选
 function reenter() {
   currentPhoto = null;
   document.getElementById('preview').classList.add('hidden');
@@ -153,13 +240,13 @@ function saveCurrent(done) {
   }
 }
 
-// 确认：保存 → 跳到该品类 Tab，当场看到（录完即所见）
+// 确认：保存 → 跳到该品类视图，当场看到
 function saveAndExit() {
   const savedCat = addCategory;
   saveCurrent(() => {
     document.getElementById('preview').classList.add('hidden');
-    currentTab = savedCat;
-    renderWardrobe();
+    currentChip = savedCat;   // 录完即所见：直接落到该品类的网格
+    renderBrowse();
   });
 }
 
@@ -176,7 +263,7 @@ function deleteCloth(id) {
   if (!confirm('确定删除这件衣服吗？')) return;
   const tx = db.transaction('clothes', 'readwrite');
   tx.objectStore('clothes').delete(id);
-  tx.oncomplete = () => renderWardrobe();
+  tx.oncomplete = () => renderBrowse();
 }
 
 // ---------- 大图查看层 ----------
