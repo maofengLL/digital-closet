@@ -1,6 +1,5 @@
-// ========== 数字衣柜 · 两页结构 ==========
-// 首页（品类入口） / 衣柜页（浏览+过滤+录入入口）
-// 品类页 = 衣柜页 + currentTab 过滤参数，不单独存在
+// ========== 数字衣柜 · 单页结构 ==========
+// 只有一个页面：衣柜。Tab=过滤，加号=录入，没有页面跳转。
 
 let db;
 const dbReq = indexedDB.open('closet-db', 2);
@@ -15,62 +14,15 @@ dbReq.onerror = () => alert('数据库打开失败，请换 Chrome 浏览器');
 
 const CATEGORIES = ['上装', '裤装', '裙装', '外套', '鞋', '配饰', '其他'];
 let currentPhoto = null;
-let currentPage = 'home';
-let currentTab = '全部';     // 衣柜页当前的过滤品类
-let addCategory = '';        // 本次录入的品类（从当前过滤继承）
+let currentTab = '全部';     // 当前过滤品类
+let addCategory = '';        // 本次录入品类（从当前过滤继承）
 
 window.onload = () => {
-  renderCategories();
   renderWardrobeTabs();
-  showPage('home');
+  renderWardrobe();
 };
 
-// ---------- 页面切换 ----------
-function showPage(name) {
-  currentPage = name;
-  document.getElementById('homeView').classList.toggle('hidden', name !== 'home');
-  document.getElementById('wardrobeView').classList.toggle('hidden', name !== 'wardrobe');
-  document.getElementById('backBtn').classList.toggle('hidden', name !== 'wardrobe');
-  document.getElementById('fab').classList.toggle('hidden', name !== 'wardrobe');
-  document.getElementById('navHome').classList.toggle('active', name === 'home');
-  document.getElementById('navWardrobe').classList.toggle('active', name === 'wardrobe');
-}
-
-function goHome() { showPage('home'); }
-
-// 底部导航进衣柜 = 全部
-function goWardrobeAll() {
-  currentTab = '全部';
-  showPage('wardrobe');
-  renderWardrobe();
-}
-
-// 首页点品类 = 衣柜页 + 该品类过滤
-function openCategory(cat) {
-  currentTab = cat;
-  showPage('wardrobe');
-  renderWardrobe();
-}
-
-// 左上角返回：衣柜 → 首页
-function onBack() {
-  if (currentPage === 'wardrobe') showPage('home');
-}
-
-// ---------- 首页品类入口 ----------
-function renderCategories() {
-  const grid = document.getElementById('catGrid');
-  grid.innerHTML = '';
-  CATEGORIES.forEach(cat => {
-    const btn = document.createElement('button');
-    btn.className = 'cat-btn';
-    btn.textContent = cat;
-    btn.onclick = () => openCategory(cat);
-    grid.appendChild(btn);
-  });
-}
-
-// ---------- 衣柜浏览 ----------
+// ---------- 衣柜浏览（唯一的页面内容） ----------
 const TABS = ['全部', ...CATEGORIES];
 
 function renderWardrobeTabs() {
@@ -87,7 +39,6 @@ function renderWardrobeTabs() {
 }
 
 function renderWardrobe() {
-  // 高亮当前 Tab
   document.querySelectorAll('.tab').forEach(b => {
     b.classList.toggle('active', b.dataset.name === currentTab);
   });
@@ -115,7 +66,6 @@ function renderWardrobe() {
       }
       cur.continue();
     } else {
-      // 空状态：空而有说法
       if (count === 0) {
         emptyTip.textContent = currentTab === '全部'
           ? '这里还空着，点右下角加号，把第一件衣服拍进来'
@@ -132,7 +82,6 @@ function renderWardrobe() {
 function openSheet() {
   const catsBox = document.getElementById('sheetCats');
   if (currentTab === '全部') {
-    // 过滤条件是"全部"时品类未知：给一排小标签让用户点选，预选第一个
     catsBox.classList.remove('hidden');
     catsBox.innerHTML = '<p class="tip">这件属于哪类？</p>';
     if (!addCategory) addCategory = CATEGORIES[0];
@@ -147,8 +96,7 @@ function openSheet() {
       catsBox.appendChild(chip);
     });
   } else {
-    // 品类继承：从"上衣"页点加号，默认就是上衣，用户无需再选
-    addCategory = currentTab;
+    addCategory = currentTab;   // 品类继承
     catsBox.classList.add('hidden');
   }
   document.getElementById('sheet').classList.remove('hidden');
@@ -175,12 +123,10 @@ function onFileChosen(event) {
 }
 
 // ---------- 预览层 ----------
-// 放弃：回衣柜页
+// 放弃：关掉预览回衣柜
 function exitPreview() {
   currentPhoto = null;
   document.getElementById('preview').classList.add('hidden');
-  showPage('wardrobe');
-  renderWardrobe();
 }
 
 // 重新录入：回动作面板重选
@@ -190,7 +136,6 @@ function reenter() {
   openSheet();
 }
 
-// 保存核心
 function saveCurrent(done) {
   if (!currentPhoto) { alert('请先选择照片'); return; }
   if (!db) { alert('数据库还没准备好，请等一秒再点'); return; }
@@ -208,18 +153,17 @@ function saveCurrent(done) {
   }
 }
 
-// 确认：保存 → 自动跳到该品类页，当场看到新衣服（录完即所见）
+// 确认：保存 → 跳到该品类 Tab，当场看到（录完即所见）
 function saveAndExit() {
   const savedCat = addCategory;
   saveCurrent(() => {
     document.getElementById('preview').classList.add('hidden');
     currentTab = savedCat;
-    showPage('wardrobe');
     renderWardrobe();
   });
 }
 
-// 下一张：保存 → 立刻打开面板接着录（批量，品类沿用）
+// 下一张：保存 → 打开面板接着录（批量，品类沿用）
 function saveAndNext() {
   saveCurrent(() => {
     document.getElementById('preview').classList.add('hidden');
