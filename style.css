@@ -66,3 +66,17 @@ button { font-family: inherit; -webkit-appearance: none; appearance: none; }
 .preview-bar button { flex: 1; padding: 14px 0; font-size: 15px; border: none; border-radius: 10px; background: #444; color: #fff; }
 .preview-bar .primary { background: #2B2B2B; }
 .preview-bar .danger { background: #B4432F; }
+
+/* ===== 按下感（全局）：所有按钮按下时缩小+变暗，纯CSS一次生效 ===== */
+button { transition: transform .08s ease, opacity .08s ease; }
+button:active { transform: scale(.96); opacity: .7; }
+
+/* ===== 轻提示 toast：屏幕中部一闪而过的小字 ===== */
+.toast {
+  position: fixed; left: 50%; top: 40%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.75); color: #fff;
+  padding: 10px 20px; border-radius: 999px;
+  font-size: 14px; z-index: 30;
+  pointer-events: none;   /* 只显示，不挡触摸 */
+}
