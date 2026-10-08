@@ -24,6 +24,15 @@ window.onload = () => {
   renderApp();
 };
 
+// ---------- 轻提示 toast：一闪而过的小字 ----------
+let toastTimer = null;
+function showToast(text) {
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add('hidden'), 1500);
+}
 // ---------- 全量加载 ----------
 function loadAll(cb) {
   allItems = [];
@@ -179,6 +188,7 @@ function closeSheet() {
 function pickFrom(src) {
   if (!addCategory) { alert('先选一个品类'); return; }
   closeSheet();
+  showToast(src === 'camera' ? '正在打开相机…' : '正在打开相册…');
   if (src === 'camera') document.getElementById('cameraInput').click();
   else document.getElementById('albumInput').click();
 }
@@ -186,6 +196,7 @@ function pickFrom(src) {
 function onFileChosen(event) {
   const file = event.target.files[0];
   if (!file) return;
+  showToast('正在读取照片…');
   currentPhoto = file;
   document.getElementById('previewImg').src = URL.createObjectURL(file);
   document.getElementById('preview').classList.remove('hidden');
@@ -207,6 +218,9 @@ function reenter() {
 function saveCurrent(done) {
   if (!currentPhoto) { alert('请先选择照片'); return; }
   if (!db) { alert('数据库还没准备好，请等一秒再点'); return; }
+  const btn = document.getElementById('confirmBtn');
+  btn.textContent = '保存中…';
+  btn.disabled = true;
   try {
     const tx = db.transaction('clothes', 'readwrite');
     tx.objectStore('clothes').add({
@@ -214,9 +228,21 @@ function saveCurrent(done) {
       category: addCategory,
       time: Date.now()
     });
-    tx.oncomplete = () => { currentPhoto = null; done(); };
-    tx.onerror = () => alert('保存失败：' + tx.error.message);
+    tx.oncomplete = () => {
+      currentPhoto = null;
+      btn.textContent = '确认';
+      btn.disabled = false;
+      showToast('已保存');
+      done();
+    };
+    tx.onerror = () => {
+      btn.textContent = '确认';
+      btn.disabled = false;
+      alert('保存失败：' + tx.error.message);
+    };
   } catch (err) {
+    btn.textContent = '确认';
+    btn.disabled = false;
     alert('出错了：' + err.message);
   }
 }
@@ -245,7 +271,8 @@ function deleteCloth(id) {
   if (!confirm('确定删除这件衣服吗？')) return;
   const tx = db.transaction('clothes', 'readwrite');
   tx.objectStore('clothes').delete(id);
-  tx.oncomplete = () => renderApp();
+  tx.oncomplete = () => { showToast('已删除'); renderApp(); };
+  tx.onerror = () => alert('删除失败：' + tx.error.message);
 }
 
 // ---------- 大图查看层 ----------
