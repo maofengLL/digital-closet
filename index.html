@@ -5,23 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
   <title>数字衣柜</title>
 </head>
 <body>
   <header>
+    <button id="backBtn" class="back-btn hidden" onclick="onBack()">←</button>
     <span>数字衣柜</span>
   </header>
 
-  <!-- 唯一的页面：衣柜（Tab 过滤 + 网格 + 加号录入） -->
-  <main>
-    <div id="wardrobeTabs" class="tabs"></div>
-    <div id="wardrobeGrid" class="wardrobe-grid"></div>
+  <!-- 页面1：衣柜首页 = 七个大按钮 -->
+  <main id="homeView">
+    <p class="tip">你的衣柜</p>
+    <div id="catGrid" class="cat-grid"></div>
+  </main>
+
+  <!-- 页面2：浏览页（分组列表 / 单品类网格） -->
+  <main id="browseView" class="hidden">
+    <div id="chipRow" class="tabs"></div>
+    <div id="blocksBox"></div>
+    <div id="gridBox" class="wardrobe-grid hidden"></div>
     <p id="emptyTip" class="tip center hidden"></p>
   </main>
 
-  <!-- 悬浮加号：录入的唯一入口，常驻 -->
-  <button id="fab" class="fab" onclick="openSheet()">＋</button>
+  <!-- 悬浮加号：录入入口，仅浏览页显示 -->
+  <button id="fab" class="fab hidden" onclick="openSheet()">＋</button>
 
   <!-- 底部动作面板 -->
   <div id="sheet" class="sheet-mask hidden" onclick="closeSheet()">
@@ -33,9 +41,9 @@
     </div>
   </div>
 
-  <!-- 底部导航：只剩一个"衣柜" -->
+  <!-- 底部导航：只有一个"衣柜" -->
   <nav class="bottom-nav">
-    <button class="active">衣柜</button>
+    <button class="active" onclick="goHome()">衣柜</button>
   </nav>
 
   <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="onFileChosen(event)">
@@ -62,7 +70,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=6"></script>
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   </script>
