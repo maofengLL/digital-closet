@@ -5,46 +5,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
   <title>数字衣柜</title>
 </head>
 <body>
-  <!-- 顶栏：标题 + 返回键（返回键平时隐藏，进品类页才出现） -->
   <header>
     <button id="backBtn" class="back-btn hidden" onclick="onBack()">←</button>
     <span>数字衣柜</span>
   </header>
 
-  <!-- 页面1：首页（选品类） -->
+  <!-- 首页：只有品类入口 -->
   <main id="homeView">
-    <p class="tip">选择要录入的衣服类别</p>
+    <p class="tip">选择要查看的类别</p>
     <div id="catGrid" class="cat-grid"></div>
   </main>
 
-  <!-- 页面2：品类页（一个"录入"按钮） -->
-  <main id="categoryView" class="hidden">
-    <p class="tip" id="categoryTip"></p>
-    <div id="categoryActions"></div>
-  </main>
-
-  <!-- 页面3：衣柜 -->
+  <!-- 衣柜页：唯一的浏览页，品类 = 过滤参数 -->
   <main id="wardrobeView" class="hidden">
     <div id="wardrobeTabs" class="tabs"></div>
     <div id="wardrobeGrid" class="wardrobe-grid"></div>
-    <p id="emptyTip" class="tip center hidden">衣柜还是空的，去"录入"一件吧</p>
+    <p id="emptyTip" class="tip center hidden"></p>
   </main>
 
-  <!-- 底部导航 -->
+  <!-- 悬浮加号：录入的唯一入口（仅衣柜页显示） -->
+  <button id="fab" class="fab hidden" onclick="openSheet()">＋</button>
+
+  <!-- 底部动作面板：拍照 / 相册 -->
+  <div id="sheet" class="sheet-mask hidden" onclick="closeSheet()">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <!-- 在"全部"Tab 点加号时，先在这里选品类 -->
+      <div id="sheetCats" class="sheet-cats hidden"></div>
+      <button class="sheet-btn" onclick="pickFrom('camera')">拍照</button>
+      <button class="sheet-btn" onclick="pickFrom('album')">从相册选择</button>
+      <button class="sheet-btn cancel" onclick="closeSheet()">取消</button>
+    </div>
+  </div>
+
   <nav class="bottom-nav">
-    <button id="navHome" class="active" onclick="switchView('home')">录入</button>
-    <button id="navWardrobe" onclick="switchView('wardrobe')">衣柜</button>
+    <button id="navHome" class="active" onclick="goHome()">首页</button>
+    <button id="navWardrobe" onclick="goWardrobeAll()">衣柜</button>
   </nav>
 
-  <!-- 相机/相册的隐藏入口 -->
   <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="onFileChosen(event)">
   <input type="file" id="albumInput" accept="image/*" style="display:none" onchange="onFileChosen(event)">
- 
-  <!-- 大图查看层：衣柜里点衣服时打开 -->
+
+  <!-- 拍照预览层 -->
+  <div id="preview" class="preview hidden">
+    <button class="preview-back" onclick="exitPreview()">←</button>
+    <img id="previewImg" alt="衣服照片">
+    <div class="preview-bar">
+      <button onclick="reenter()">重新录入</button>
+      <button onclick="saveAndNext()">下一张</button>
+      <button class="primary" onclick="saveAndExit()">确认</button>
+    </div>
+  </div>
+
+  <!-- 大图查看层 -->
   <div id="detail" class="preview hidden">
     <button class="preview-back" onclick="closeDetail()">←</button>
     <img id="detailImg" alt="衣服大图">
@@ -53,18 +69,8 @@
       <button class="primary" onclick="closeDetail()">关闭</button>
     </div>
   </div>
-  <!-- 预览层：全屏覆盖，返回键在左上角 -->
-  <div id="preview" class="preview hidden">
-    <button class="preview-back" onclick="exitPreview()">←</button>
-    <img id="previewImg" alt="衣服照片">
-    <div class="preview-bar">
-      <button onclick="reenter()">重新录入</button>
-      <button onclick="saveAndNext()">下一张</button>
-      <button class="primary" id="confirmBtn" onclick="saveAndExit()">确认</button>
-    </div>
-  </div>
 
-   <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   </script>
