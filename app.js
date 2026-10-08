@@ -212,7 +212,7 @@ function openSheet() {
   const catsBox = document.getElementById('sheetCats');
   catsBox.classList.remove('hidden');
   catsBox.innerHTML = '<p class="tip">这件放进哪个抽屉？</p>';
-  if (!addCategory) addCategory = currentTab !== '全部' ? currentTab : CATEGORIES[0];
+    if (!addCategory) addCategory = currentChip !== '全部' ? currentChip : CATEGORIES[0];
   CATEGORIES.forEach(c => {
     const chip = document.createElement('button');
     chip.className = 'chip' + (c === addCategory ? ' active' : '');
