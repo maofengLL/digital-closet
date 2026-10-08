@@ -8,53 +8,53 @@ main { padding: 16px; }
 button { font-family: inherit; -webkit-appearance: none; appearance: none; }
 .hidden { display: none !important; }
 
-/* 首页品类 */
+/* 首页：七个大按钮 */
 .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .cat-btn { padding: 28px 0; font-size: 17px; color: #2B2B2B; background: #fff; border: 1px solid #E5E2DA; border-radius: 12px; }
 .cat-btn:active { background: #EFEBE2; }
 
-/* 衣柜 */
+/* 浏览页 chips */
 .tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; }
 .tab { flex: 0 0 auto; padding: 8px 16px; font-size: 14px; color: #2B2B2B; background: #fff; border: 1px solid #E5E2DA; border-radius: 999px; }
 .tab.active { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
+
+/* 分组区块 */
+.section { margin-bottom: 18px; }
+.section-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: 6px; margin-bottom: 8px;
+  border-bottom: 1px solid #E5E2DA;   /* 分隔线 */
+}
+.section-head .name { font-size: 15px; font-weight: 600; }
+.section-head .count { font-size: 13px; color: #8A867D; }
+.block-empty { font-size: 13px; color: #8A867D; padding: 4px 0; }
+
+/* 区块体：横向缩略图一行，超出横滑 */
+.hrow { display: flex; gap: 8px; overflow-x: auto; }
+.hthumb { flex: 0 0 auto; width: 96px; height: 96px; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid #E5E2DA; }
+.hthumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* 单品类网格 */
 .wardrobe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .thumb { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid #E5E2DA; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-/* 悬浮加号 FAB */
+/* FAB */
 .fab {
-  position: fixed;
-  right: 16px; bottom: 76px;      /* 底部导航上方 */
-  width: 56px; height: 56px;
-  border-radius: 50%;
-  background: #2B2B2B; color: #fff;
-  font-size: 28px; border: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,.25);
-  z-index: 5;
+  position: fixed; right: 16px; bottom: 76px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #2B2B2B; color: #fff; font-size: 28px; border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25); z-index: 5;
 }
 
 /* 底部动作面板 */
 .sheet-mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 20; }
-.sheet {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  background: #fff;
-  border-radius: 16px 16px 0 0;
-  padding: 16px 16px 24px;
-}
-.sheet-btn {
-  display: block; width: 100%;
-  padding: 16px 0; margin-top: 8px;
-  font-size: 16px; color: #2B2B2B;
-  background: #F3F1EA; border: none; border-radius: 12px;
-}
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 16px 16px 0 0; padding: 16px 16px 24px; }
+.sheet-btn { display: block; width: 100%; padding: 16px 0; margin-top: 8px; font-size: 16px; color: #2B2B2B; background: #F3F1EA; border: none; border-radius: 12px; }
 .sheet-btn.cancel { color: #8A867D; }
 .sheet-cats { margin-bottom: 8px; }
 .sheet-cats .tip { margin-bottom: 8px; }
-.chip {
-  padding: 8px 14px; margin: 0 6px 6px 0;
-  font-size: 14px; color: #2B2B2B;
-  background: #fff; border: 1px solid #E5E2DA; border-radius: 999px;
-}
+.chip { padding: 8px 14px; margin: 0 6px 6px 0; font-size: 14px; color: #2B2B2B; background: #fff; border: 1px solid #E5E2DA; border-radius: 999px; }
 .chip.active { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
 
 /* 预览层 / 大图层 */
@@ -68,5 +68,4 @@ button { font-family: inherit; -webkit-appearance: none; appearance: none; }
 
 /* 底部导航 */
 .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: #fff; border-top: 1px solid #E5E2DA; }
-.bottom-nav button { flex: 1; padding: 14px 0; font-size: 15px; color: #8A867D; background: none; border: none; }
-.bottom-nav button.active { color: #2B2B2B; font-weight: 600; }
+.bottom-nav button { flex: 1; padding: 14px 0; font-size: 15px; color: #2B2B2B; font-weight: 600; background: none; border: none; }
