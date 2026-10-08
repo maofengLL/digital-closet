@@ -80,3 +80,12 @@ button:active { transform: scale(.96); opacity: .7; }
   font-size: 14px; z-index: 30;
   pointer-events: none;   /* 只显示，不挡触摸 */
 }
+
+/* ===== 轮廓剪影：叠加在拍照预览上，只显示不挡触摸 ===== */
+.outline {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  z-index: 9;
+}
+.outline svg { width: 72%; height: 72%; }
