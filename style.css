@@ -78,9 +78,10 @@ button:active { transform: scale(.96); opacity: .7; }
   background: rgba(0,0,0,.75); color: #fff;
   padding: 10px 20px; border-radius: 999px;
   font-size: 14px; z-index: 30;
-  pointer-events: none;   /* 只显示，不挡触摸 */
+   pointer-events: none;   /* 只显示，不挡触摸 */
+}
 
-  /* ===== 顶栏"?"按钮（常驻） ===== */
+/* ===== 顶栏"?"按钮（常驻） ===== */
 .help-btn {
   width: 32px; height: 32px; border-radius: 50%;
   background: #fff; border: 1.5px solid #2B2B2B;
