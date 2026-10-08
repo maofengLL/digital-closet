@@ -19,6 +19,16 @@ let currentPhoto = null;
 let currentChip = '全部';
 let addCategory = '';
 let allItems = [];
+// ---------- 轮廓剪影：每个品类一张半透明 SVG，叠加在拍照预览上 ----------
+const SILHOUETTES = {
+  '上装': '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M30 30 L40 23 Q50 29 60 23 L70 30 L82 46 L73 52 L71 46 L71 82 L29 82 L29 46 L27 52 L18 46 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5" stroke-linejoin="round"/></svg>',
+  '裤装': '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M32 18 L68 18 L73 82 L56 82 L50 42 L44 82 L27 82 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5" stroke-linejoin="round"/></svg>',
+  '裙装': '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M34 22 L66 22 L80 80 L20 80 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5" stroke-linejoin="round"/><line x1="34" y1="30" x2="66" y2="30" stroke="#fff" stroke-opacity=".85" stroke-width="2.5"/></svg>',
+  '外套': '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M30 30 L40 22 L50 29 L60 22 L70 30 L83 48 L74 54 L72 47 L72 83 L28 83 L28 47 L26 54 L17 48 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5" stroke-linejoin="round"/><line x1="50" y1="31" x2="50" y2="83" stroke="#fff" stroke-opacity=".85" stroke-width="2.5"/></svg>',
+  '鞋':   '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M16 66 L16 62 Q16 54 26 54 L44 54 Q53 54 58 47 L66 54 Q82 57 84 66 L84 70 L16 70 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5" stroke-linejoin="round"/></svg>',
+  '配饰': '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M26 56 Q26 30 50 30 Q74 30 74 56 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5"/><path d="M18 58 L82 58 Q86 58 86 62 L86 64 L14 64 L14 62 Q14 58 18 58 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5"/></svg>',
+  '其他': '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="26" y="26" width="48" height="48" rx="10" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-opacity=".85" stroke-width="2.5" stroke-dasharray="6 5"/></svg>'
+};
 
 // 应用启动入口（由数据库开门成功后调用，见 dbReq.onsuccess）
 function startApp() {
@@ -159,30 +169,24 @@ function renderGrid(cat) {
   });
 }
 
-// ---------- FAB → 动作面板 ----------
+// 面板从此总是先选品类（剪影需要它），预选当前抽屉或上次用过的
 function openSheet() {
   const catsBox = document.getElementById('sheetCats');
-  if (currentChip === '全部') {
-    catsBox.classList.remove('hidden');
-    catsBox.innerHTML = '<p class="tip">这件放进哪个抽屉？</p>';
-    if (!addCategory) addCategory = CATEGORIES[0];
-    CATEGORIES.forEach(c => {
-      const chip = document.createElement('button');
-      chip.className = 'chip' + (c === addCategory ? ' active' : '');
-      chip.textContent = c;
-      chip.onclick = () => {
-        addCategory = c;
-        catsBox.querySelectorAll('.chip').forEach(x => x.classList.toggle('active', x.textContent === c));
-      };
-      catsBox.appendChild(chip);
-    });
-  } else {
-    addCategory = currentChip;
-    catsBox.classList.add('hidden');
-  }
+  catsBox.classList.remove('hidden');
+  catsBox.innerHTML = '<p class="tip">这件放进哪个抽屉？</p>';
+  if (!addCategory) addCategory = currentTab !== '全部' ? currentTab : CATEGORIES[0];
+  CATEGORIES.forEach(c => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (c === addCategory ? ' active' : '');
+    chip.textContent = c;
+    chip.onclick = () => {
+      addCategory = c;
+      catsBox.querySelectorAll('.chip').forEach(x => x.classList.toggle('active', x.textContent === c));
+    };
+    catsBox.appendChild(chip);
+  });
   document.getElementById('sheet').classList.remove('hidden');
 }
-
 function closeSheet() {
   document.getElementById('sheet').classList.add('hidden');
 }
@@ -201,6 +205,8 @@ function onFileChosen(event) {
   showToast('正在读取照片…');
   currentPhoto = file;
   document.getElementById('previewImg').src = URL.createObjectURL(file);
+  // 叠上该品类的轮廓剪影（引导用户对齐，不拦截）
+  document.getElementById('outline').innerHTML = SILHOUETTES[addCategory] || '';
   document.getElementById('preview').classList.remove('hidden');
   event.target.value = '';
 }
