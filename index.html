@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=9">
+  <link rel="stylesheet" href="style.css?v=10">
   <title>数字衣柜</title>
 </head>
 <body>
   <!-- 顶栏：标题 + 总数 -->
-  <header>
+    <header>
     <span>我的衣柜 · 共<span id="totalCount">0</span>件</span>
+    <button class="help-btn" onclick="openTip('manual')">?</button>
   </header>
 
   <!-- 唯一页面：抽屉柜 -->
@@ -52,7 +53,6 @@
   <div id="preview" class="preview hidden">
     <button class="preview-back" onclick="exitPreview()">←</button>
     <img id="previewImg" alt="衣服照片">
-        <div id="outline" class="outline"></div>
     <div class="preview-bar">
       <button onclick="reenter()">重新录入</button>
       <button onclick="saveAndNext()">下一张</button>
@@ -70,8 +70,23 @@
     </div>
   </div>
 
+   <!-- 拍照贴士卡片：A形态（拍照前自动）/ B形态（点"?"手动），共用同一张卡 -->
+  <div id="tipMask" class="tip-mask hidden">
+    <div class="tip-card">
+      <h3 class="tip-title">拍照小贴士</h3>
+      <p class="tip-line">找一块纯色的背景哦～</p>
+      <p class="tip-line">周围先不要放杂物呀</p>
+      <p class="tip-line">在亮亮的地方拍，会更好看呢</p>
+      <!-- 只有A形态显示：第4句 + 小圆圈 -->
+      <div id="tipDismissRow" class="tip-dismiss hidden" onclick="toggleTipCircle()">
+        <span id="tipCircle" class="tip-circle"></span>
+        <span class="tip-dismiss-text">点小圆圈，下次就不再提醒你了</span>
+      </div>
+      <button class="tip-ok" onclick="closeTip()">知道了</button>
+    </div>
+  </div> 
   <div id="toast" class="toast hidden"></div> 
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   </script>
