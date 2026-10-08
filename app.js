@@ -10,7 +10,8 @@ dbReq.onupgradeneeded = e => {
     d.createObjectStore('clothes', { keyPath: 'id', autoIncrement: true });
   }
 };
-dbReq.onsuccess = e => { db = e.target.result; };
+// 数据库开门成功，才启动界面（IndexedDB 是异步的，页面加载等不了它）
+dbReq.onsuccess = e => { db = e.target.result; startApp(); };
 dbReq.onerror = () => alert('数据库打开失败，请换 Chrome 浏览器');
 
 const CATEGORIES = ['上装', '裤装', '裙装', '外套', '鞋', '配饰', '其他'];
@@ -19,10 +20,11 @@ let currentChip = '全部';
 let addCategory = '';
 let allItems = [];
 
-window.onload = () => {
+// 应用启动入口（由数据库开门成功后调用，见 dbReq.onsuccess）
+function startApp() {
   renderChips();
   renderApp();
-};
+}
 
 // ---------- 轻提示 toast：一闪而过的小字 ----------
 let toastTimer = null;
