@@ -1,6 +1,6 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: sans-serif; background: #FAFAF7; color: #2B2B2B; }
-header { padding: 14px 16px; font-size: 18px; font-weight: 600; background: #fff; border-bottom: 1px solid #E5E2DA; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; font-size: 18px; font-weight: 600; background: #fff; border-bottom: 1px solid #E5E2DA; }
 main { padding: 16px 16px 24px; }
 .tip { font-size: 13px; color: #8A867D; margin-bottom: 12px; }
 .tip.center { text-align: center; margin-top: 40px; line-height: 22px; }
@@ -79,13 +79,49 @@ button:active { transform: scale(.96); opacity: .7; }
   padding: 10px 20px; border-radius: 999px;
   font-size: 14px; z-index: 30;
   pointer-events: none;   /* 只显示，不挡触摸 */
+
+  /* ===== 顶栏"?"按钮（常驻） ===== */
+.help-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #fff; border: 1.5px solid #2B2B2B;
+  color: #2B2B2B; font-size: 15px; font-weight: 700;
 }
 
-/* ===== 轮廓剪影：叠加在拍照预览上，只显示不挡触摸 ===== */
-.outline {
-  position: absolute; inset: 0;
+/* ===== 拍照贴士卡片 ===== */
+.tip-mask {
+  position: fixed; inset: 0; z-index: 40;
+  background: rgba(245, 238, 227, .45);   /* 淡暖色半透明罩 */
+  backdrop-filter: blur(6px);             /* 背景毛玻璃 */
   display: flex; align-items: center; justify-content: center;
-  pointer-events: none;
-  z-index: 9;
+  animation: fadeIn .2s ease;
 }
-.outline svg { width: 72%; height: 72%; }
+.tip-card {
+  width: 78%; max-width: 320px;
+  background: #FFFDF8;
+  border: 1px solid #EDE7DA;
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(60,50,30,.18), 0 2px 8px rgba(60,50,30,.08);
+  padding: 24px 22px;
+  animation: popIn .2s ease;
+}
+.tip-title { font-size: 16px; font-weight: 600; text-align: center; margin-bottom: 14px; }
+.tip-line { font-size: 15px; color: #4A463F; line-height: 30px; }
+.tip-dismiss { display: flex; align-items: center; gap: 8px; margin: 12px 0 4px; }
+.tip-circle {
+  width: 18px; height: 18px; flex: 0 0 auto;
+  border: 1.5px solid #8A867D; border-radius: 50%;
+}
+.tip-circle.checked { background: #2B2B2B; border-color: #2B2B2B; box-shadow: inset 0 0 0 3px #FFFDF8; }
+.tip-dismiss-text { font-size: 12px; color: #8A867D; }
+.tip-ok {
+  display: block; width: 100%; margin-top: 16px; padding: 12px 0;
+  font-size: 16px; font-weight: 600; color: #fff;
+  background: #2B2B2B; border: none; border-radius: 12px;
+}
+
+/* 卡片动画：背景淡入 + 卡片缩放上浮 */
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes popIn { from { opacity: 0; transform: scale(.94) translateY(8px) } to { opacity: 1; transform: none } }
+}
+
+
