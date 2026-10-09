@@ -205,3 +205,7 @@ button:active { transform: scale(.96); opacity: .7; }
 
 /* 收牌用的幽灵克隆 */
 .chip-ghost { position: fixed; z-index: 60; pointer-events: none; transition: transform .18s ease-in, opacity .18s ease-in; }
+
+/* ===== 细节打磨：间距与多选让位 ===== */
+.filter-bar { margin-bottom: 12px; }           /* 网格与筛选条/药丸之间留距 */
+body.selecting main { padding-top: 56px; }     /* 多选时给悬浮顶栏让位 */
