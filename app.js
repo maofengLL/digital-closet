@@ -331,7 +331,8 @@ function renderBlocks() {
       row.className = 'hrow';
            items.forEach(item => {
         const d = document.createElement('div');
-        d.className = 'hthumb' + (selectedIds.has(item.id) ? ' selected' : '');
+            d.className = 'hthumb' + (selectedIds.has(item.id) ? ' selected' : '');
+        d.dataset.id = item.id;
         const img = document.createElement('img');
         img.src = URL.createObjectURL(item.image);
         d.appendChild(img);
@@ -366,7 +367,8 @@ function renderGrid(cat) {
   }
     items.forEach(item => {
     const div = document.createElement('div');
-    div.className = 'thumb' + (selectedIds.has(item.id) ? ' selected' : '');
+      div.className = 'thumb' + (selectedIds.has(item.id) ? ' selected' : '');
+    div.dataset.id = item.id;
     const img = document.createElement('img');
     img.src = URL.createObjectURL(item.image);
     div.appendChild(img);
@@ -519,7 +521,10 @@ function toggleSelect(id) {
   if (selectedIds.has(id)) selectedIds.delete(id);
   else selectedIds.add(id);
   updateSelectUI();
-  renderApp();
+  // 只切换被点那一项的样式，绝不整页重绘（重绘会闪）
+  document.querySelectorAll('[data-id="' + id + '"]').forEach(el => {
+    el.classList.toggle('selected', selectedIds.has(id));
+  });
 }
 
 function toggleSelectAll() {
@@ -552,6 +557,7 @@ window.addEventListener('popstate', () => {
 });
 
 function updateSelectUI() {
+    document.body.classList.toggle('selecting', selectMode);
   document.getElementById('normalHeader').classList.toggle('hidden', selectMode);
   document.getElementById('selectBar').classList.toggle('hidden', !selectMode);
   document.getElementById('manageBar').classList.toggle('hidden', !selectMode);
