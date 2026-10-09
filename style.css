@@ -60,9 +60,9 @@ button { font-family: inherit; -webkit-appearance: none; appearance: none; }
 
 /* 预览层 / 大图层 */
 .preview { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; z-index: 10; }
-.preview img { flex: 1; object-fit: contain; width: 100%; }
+.preview img { flex: 1; min-height: 0; object-fit: contain; width: 100%; }
 .preview-back { position: absolute; top: 12px; left: 12px; z-index: 11; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,.5); color: #fff; font-size: 20px; border: none; }
-.preview-bar { display: flex; gap: 10px; padding: 16px; }
+.preview-bar { flex-shrink: 0; display: flex; gap: 10px; padding: 16px; }
 .preview-bar button { flex: 1; padding: 14px 0; font-size: 15px; border: none; border-radius: 10px; background: #444; color: #fff; }
 .preview-bar .primary { background: #2B2B2B; }
 .preview-bar .danger { background: #B4432F; }
