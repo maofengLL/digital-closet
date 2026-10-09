@@ -566,7 +566,13 @@ function careSwitchFull() {
 }
 
 // 问卷页返回键：回确认页，不保存问卷数据
+// 返回键：全量形态→退回精简问卷（答案保留）；精简形态→退回照片确认页（不保存问卷数据）
 function careBack() {
+  if (careQuiz && careQuiz.mode === 'full') {
+    careQuiz.mode = 'lite';
+    renderCareQuiz();      // 退层，answers 原样保留（包括隐藏的水温题）
+    return;
+  }
   const photo = pendingEntry ? pendingEntry.photo : null;
   closeCareQuiz();
   if (photo) {
