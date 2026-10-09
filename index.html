@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=32">
+  <link rel="stylesheet" href="style.css?v=33">
   <title>数字衣柜</title>
 </head>
 <body>
@@ -128,6 +128,7 @@
       <p id="careToFull" class="care-to-full hidden" onclick="careSwitchFull()">洗水唛在手边？填完整档案</p>
       <div id="careBody"></div>
       <div class="care-actions">
+        <button id="careBackBtn" class="care-skip hidden" onclick="careBack()">返回</button>
         <button id="careSkipBtn" class="care-skip hidden" onclick="careSkip()">没有洗水唛，先跳过</button>
         <button class="care-ok" onclick="careConfirm()">确认</button>
       </div>
@@ -137,7 +138,7 @@
   <div id="stamp" class="stamp hidden"><div class="stamp-inner"><span class="stamp-title">档案建好</span><span class="stamp-date" id="stampDate"></span></div></div>
   <div id="miniCheck" class="mini-check hidden">✓</div>
   <div id="toast" class="toast hidden"></div> 
-  <script src="app.js?v=32"></script>
+  <script src="app.js?v=33"></script>
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   </script>
