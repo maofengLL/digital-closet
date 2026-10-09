@@ -126,7 +126,7 @@ button:active { transform: scale(.96); opacity: .7; }
 }
 
 /* ===== 筛选条：药丸 + 下拉面板 ===== */
-.filter-bar { position: relative; }
+.filter-bar { position: relative; display: flex; justify-content: flex-start; align-items: center; }
 .pill {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 8px 16px; font-size: 14px; color: #2B2B2B;
