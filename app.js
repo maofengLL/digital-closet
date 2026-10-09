@@ -158,12 +158,34 @@ let dropOpen = false;
 function renderChips() {
   const box = document.getElementById('chipRow');
   box.innerHTML = '';
-  ['全部', ...CATEGORIES].forEach(t => {
+  // "全部"固定首位：不可拖、视觉突出
+  const all = document.createElement('button');
+  all.className = 'tab all-chip';
+  all.textContent = '全部';
+  all.dataset.name = '全部';
+  all.onclick = () => onChipClick('全部');
+  box.appendChild(all);
+  catOrder.forEach(t => {
     const b = document.createElement('button');
     b.className = 'tab';
     b.textContent = t;
     b.dataset.name = t;
-    b.onclick = () => onChipClick(t);   // S1：收牌成药丸
+    b.onclick = () => { if (justDragged()) return; onChipClick(t); };
+    bindSortable(b, {
+      onDragMove: (x) => {
+        const others = Array.from(box.children).filter(e => e !== b && e.dataset.name !== '全部');
+        let idx = others.length;
+        for (let i = 0; i < others.length; i++) {
+          const r = others[i].getBoundingClientRect();
+          if (x < r.left + r.width / 2) { idx = i; break; }
+        }
+        flipTo(box, [box.children[0]].concat(others.slice(0, idx), [b], others.slice(idx)));
+      },
+      onDrop: () => {
+        catOrder = Array.from(box.children).slice(1).map(c => c.dataset.name);
+        saveCatOrder();
+      }
+    });
     box.appendChild(b);
   });
 }
@@ -172,7 +194,7 @@ function renderChips() {
 function buildDropChips() {
   const box = document.getElementById('dropChips');
   box.innerHTML = '';
-  ['全部', ...CATEGORIES].forEach(t => {
+  ['全部', ...catOrder].forEach(t => {
     const b = document.createElement('button');
     b.className = 'chip';
     b.textContent = t;
@@ -365,16 +387,15 @@ function renderBlocks() {
   emptyTip.classList.add('hidden');
   blocksBox.innerHTML = '';
 
-  CATEGORIES.forEach(cat => {
-    const items = allItems.filter(i => i.category === cat);
+  catOrder.forEach(cat => {
+    const items = sortItems(allItems.filter(i => i.category === cat), cat);
     const sec = document.createElement('div');
     sec.className = 'section';
 
-    // 抽屉头：可点（= 点 chip），箭头提示可进入
     const head = document.createElement('div');
     head.className = 'section-head tap';
     head.innerHTML = `<span class="name">${cat}</span><span class="count">${items.length} 件 ›</span>`;
-    head.onclick = () => { currentChip = cat; renderApp(); };
+    head.onclick = () => { if (justDragged()) return; currentChip = cat; renderApp(); };
     sec.appendChild(head);
 
     if (items.length === 0) {
@@ -385,9 +406,9 @@ function renderBlocks() {
     } else {
       const row = document.createElement('div');
       row.className = 'hrow';
-           items.forEach(item => {
+      items.forEach(item => {
         const d = document.createElement('div');
-            d.className = 'hthumb' + (selectedIds.has(item.id) ? ' selected' : '');
+        d.className = 'hthumb' + (selectedIds.has(item.id) ? ' selected' : '');
         d.dataset.id = item.id;
         const img = document.createElement('img');
         img.src = URL.createObjectURL(item.image);
@@ -395,8 +416,12 @@ function renderBlocks() {
         const badge = document.createElement('span');
         badge.className = 'check-badge';
         d.appendChild(badge);
-        d.addEventListener('click', () => { if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image); });
-        bindLongPress(d, () => { if (!selectMode) enterSelectMode(item.id); });
+        d.addEventListener('click', () => { if (justDragged()) return; if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image); });
+        bindSortable(d, {
+          onHoldStill: () => enterSelectMode(item.id),
+          onDragMove: (x) => rowReorder(row, d, x),
+          onDrop: () => persistItemOrder(cat, row)
+        });
         row.appendChild(d);
       });
       sec.appendChild(row);
@@ -414,16 +439,16 @@ function renderGrid(cat) {
   gridBox.classList.remove('hidden');
   gridBox.innerHTML = '';
 
-  const items = allItems.filter(i => i.category === cat);
+  const items = sortItems(allItems.filter(i => i.category === cat), cat);
   if (items.length === 0) {
     gridBox.classList.add('hidden');
     emptyTip.textContent = `抽屉空着，右下角加号放进第一件${cat}`;
     emptyTip.classList.remove('hidden');
     return;
   }
-    items.forEach(item => {
+  items.forEach(item => {
     const div = document.createElement('div');
-      div.className = 'thumb' + (selectedIds.has(item.id) ? ' selected' : '');
+    div.className = 'thumb' + (selectedIds.has(item.id) ? ' selected' : '');
     div.dataset.id = item.id;
     const img = document.createElement('img');
     img.src = URL.createObjectURL(item.image);
@@ -431,8 +456,12 @@ function renderGrid(cat) {
     const badge = document.createElement('span');
     badge.className = 'check-badge';
     div.appendChild(badge);
-    div.addEventListener('click', () => { if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image); });
-    bindLongPress(div, () => { if (!selectMode) enterSelectMode(item.id); });
+    div.addEventListener('click', () => { if (justDragged()) return; if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image); });
+    bindSortable(div, {
+      onHoldStill: () => enterSelectMode(item.id),
+      onDragMove: (x, y) => gridReorder(gridBox, div, x, y),
+      onDrop: () => persistItemOrder(cat, gridBox)
+    });
     gridBox.appendChild(div);
   });
 }
@@ -443,9 +472,9 @@ function openSheet() {
   const catsBox = document.getElementById('sheetCats');
   if (currentChip === '全部') {
     catsBox.classList.remove('hidden');
-    catsBox.innerHTML = '<p class="tip">这件放进哪个抽屉？</p>';
-    if (!addCategory) addCategory = CATEGORIES[0];
-    CATEGORIES.forEach(c => {
+    catsBox.innerHT ML = '<p class="tip">这件放进哪个抽屉？</p>';
+    if (!addCategory) addCategory = catOrder[0];
+    catOrder.forEach(c => {
       const chip = document.createElement('button');
       chip.className = 'chip' + (c === addCategory ? ' active' : '');
       chip.textContent = c;
@@ -558,6 +587,175 @@ function saveAndNext() {
   });
 }
 
+// ---------- 排序系统：长按拖拽 + FLIP让位（纯JS，无库） ----------
+// 手势：按住600ms+移动>10px=拖拽；按住不动即松手=多选（既有逻辑）
+let catOrder = loadCatOrder();
+const dragState = { active: false };
+let suppressClickUntil = 0;
+
+function justDragged() { return Date.now() < suppressClickUntil; }
+
+function loadCatOrder() {
+  try {
+    const o = JSON.parse(localStorage.getItem('catOrder'));
+    if (Array.isArray(o) && o.length === CATEGORIES.length && o.every(c => CATEGORIES.includes(c))) return o;
+  } catch (e) {}
+  return CATEGORIES.slice();
+}
+function saveCatOrder() { localStorage.setItem('catOrder', JSON.stringify(catOrder)); }
+
+function loadItemOrder(cat) {
+  try {
+    const o = JSON.parse(localStorage.getItem('itemOrder_' + cat));
+    if (Array.isArray(o)) return o;
+  } catch (e) {}
+  return [];
+}
+function saveItemOrder(cat, ids) { localStorage.setItem('itemOrder_' + cat, JSON.stringify(ids)); }
+
+// 按持久化顺序排列；未记录的新衣物自动排该类末尾
+function sortItems(items, cat) {
+  const order = loadItemOrder(cat);
+  if (!order.length) return items;
+  const map = {};
+  items.forEach(i => { map[i.id] = i; });
+  const sorted = [], used = new Set();
+  order.forEach(id => { if (map[id] && !used.has(id)) { sorted.push(map[id]); used.add(id); } });
+  items.forEach(i => { if (!used.has(i.id)) sorted.push(i); });
+  return sorted;
+}
+
+// 绑定长按拖拽。ctx: { onHoldStill, onDragMove(x,y), onDrop }
+function bindSortable(el, ctx) {
+  let startX = 0, startY = 0, timer = null, holding = false, moved = false;
+  let floaty = null, offX = 0, offY = 0;
+
+  function down(x, y) {
+    if (dragState.active || selectMode) return;
+    startX = x; startY = y; moved = false; holding = false;
+    timer = setTimeout(() => { holding = true; }, 600);
+  }
+  function move(x, y, ev) {
+    if (!timer && !holding) return;
+    const dist = Math.hypot(x - startX, y - startY);
+    if (!holding) {
+      if (dist > 10) { clearTimeout(timer); timer = null; }   // 提前移动=滚动/滑动意图，弃权
+      return;
+    }
+    if (!moved && dist > 10) { moved = true; startDrag(); }
+    if (moved) {
+      if (ev && ev.cancelable) ev.preventDefault();           // 阻断原生滚动
+      floaty.style.left = (x - offX) + 'px';
+      floaty.style.top = (y - offY) + 'px';
+      ctx.onDragMove && ctx.onDragMove(x, y);
+    }
+  }
+  function up() {
+    clearTimeout(timer); timer = null;
+    if (holding && !moved) { holding = false; ctx.onHoldStill && ctx.onHoldStill(); return; }
+    if (moved) finishDrag();
+    holding = false; moved = false;
+  }
+  function forceEnd() {
+    clearTimeout(timer); timer = null;
+    if (moved) finishDrag();
+    holding = false; moved = false;
+  }
+
+  function startDrag() {
+    dragState.active = true;
+    suppressClickUntil = Date.now() + 400;
+    if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }   // iOS静默
+    const r = el.getBoundingClientRect();
+    offX = startX - r.left; offY = startY - r.top;
+    floaty = el.cloneNode(true);
+    floaty.className = el.className.replace('drag-src', '') + ' drag-float';
+    floaty.style.left = r.left + 'px';
+    floaty.style.top = r.top + 'px';
+    floaty.style.width = r.width + 'px';
+    floaty.style.height = r.height + 'px';
+    document.body.appendChild(floaty);
+    el.classList.add('drag-src');   // 原位置隐形占位，布局不塌
+  }
+
+  function finishDrag() {
+    const slot = el.getBoundingClientRect();   // el已被FLIP移到目标位，占位即空位
+    floaty.classList.add('dropping');
+    floaty.style.left = slot.left + 'px';
+    floaty.style.top = slot.top + 'px';
+    setTimeout(() => {
+      floaty.remove(); floaty = null;
+      el.classList.remove('drag-src');
+      dragState.active = false;
+      suppressClickUntil = Date.now() + 300;   // 吃掉松手后的误点击
+      if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+      ctx.onDrop && ctx.onDrop();
+    }, 100);   // 100ms轻缓动落位，无大回弹
+  }
+
+  // 触屏
+  el.addEventListener('touchstart', e => { const t = e.touches[0]; down(t.clientX, t.clientY); }, { passive: true });
+  el.addEventListener('touchmove', e => { const t = e.touches[0]; move(t.clientX, t.clientY, e); }, { passive: false });
+  el.addEventListener('touchend', up);
+  el.addEventListener('touchcancel', forceEnd);
+  // 鼠标（电脑调试用）
+  el.addEventListener('mousedown', e => { if (e.button === 0) down(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e => { if (timer || holding) move(e.clientX, e.clientY, null); });
+  window.addEventListener('mouseup', () => { if (timer || holding) up(); });
+}
+
+// FLIP：兄弟元素滑开让位（≤200ms缓动，布局零跳动）
+function flipTo(container, orderedEls) {
+  const first = new Map();
+  Array.from(container.children).forEach(c => first.set(c, c.getBoundingClientRect()));
+  orderedEls.forEach(e => container.appendChild(e));
+  Array.from(container.children).forEach(c => {
+    const f = first.get(c);
+    if (!f) return;
+    const l = c.getBoundingClientRect();
+    const dx = f.left - l.left, dy = f.top - l.top;
+    if (dx || dy) {
+      c.style.transition = 'none';
+      c.style.transform = `translate(${dx}px, ${dy}px)`;
+      requestAnimationFrame(() => {
+        c.style.transition = 'transform .18s ease';
+        c.style.transform = '';
+        c.addEventListener('transitionend', () => { c.style.transition = ''; }, { once: true });
+      });
+    }
+  });
+}
+
+// 网格插入位置：阅读顺序（先行后列）
+function gridReorder(container, draggedEl, x, y) {
+  const others = Array.from(container.children).filter(e => e !== draggedEl);
+  let idx = others.length;
+  for (let i = 0; i < others.length; i++) {
+    const r = others[i].getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    if (cy > y + 4 || (Math.abs(cy - y) <= 4 && cx > x)) { idx = i; break; }
+  }
+  flipTo(container, others.slice(0, idx).concat([draggedEl], others.slice(idx)));
+}
+
+// 抽屉行插入位置：仅左右换位
+function rowReorder(container, draggedEl, x) {
+  const others = Array.from(container.children).filter(e => e !== draggedEl);
+  let idx = others.length;
+  for (let i = 0; i < others.length; i++) {
+    const r = others[i].getBoundingClientRect();
+    if (x < r.left + r.width / 2) { idx = i; break; }
+  }
+  flipTo(container, others.slice(0, idx).concat([draggedEl], others.slice(idx)));
+}
+
+// 落位后持久化某类的衣物顺序
+function persistItemOrder(cat, container) {
+  const ids = Array.from(container.children)
+    .map(c => parseInt(c.dataset.id, 10))
+    .filter(n => !isNaN(n));
+  saveItemOrder(cat, ids);
+}
 // ---------- 长按多选管理模式（独立叠加状态，不污染普通模式） ----------
 let selectMode = false;
 let selectedIds = new Set();
@@ -629,7 +827,7 @@ function openMoveSheet() {
   if (selectedIds.size === 0) return;
   const box = document.getElementById('moveChips');
   box.innerHTML = '';
-  CATEGORIES.forEach(c => {
+  catOrder.forEach(c => {
     const chip = document.createElement('button');
     chip.className = 'chip';
     chip.textContent = c;
