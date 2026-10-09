@@ -207,22 +207,29 @@ function renderGrid(cat) {
   });
 }
 
-// 面板从此总是先选品类（剪影需要它），预选当前抽屉或上次用过的
+// ---------- FAB → 动作面板 ----------
+// 单品类态：跳过品类问题，直接拍照/相册；"全部"态：先问放进哪个抽屉
 function openSheet() {
   const catsBox = document.getElementById('sheetCats');
-  catsBox.classList.remove('hidden');
-  catsBox.innerHTML = '<p class="tip">这件放进哪个抽屉？</p>';
-    if (!addCategory) addCategory = currentChip !== '全部' ? currentChip : CATEGORIES[0];
-  CATEGORIES.forEach(c => {
-    const chip = document.createElement('button');
-    chip.className = 'chip' + (c === addCategory ? ' active' : '');
-    chip.textContent = c;
-    chip.onclick = () => {
-      addCategory = c;
-      catsBox.querySelectorAll('.chip').forEach(x => x.classList.toggle('active', x.textContent === c));
-    };
-    catsBox.appendChild(chip);
-  });
+  if (currentChip === '全部') {
+    catsBox.classList.remove('hidden');
+    catsBox.innerHTML = '<p class="tip">这件放进哪个抽屉？</p>';
+    if (!addCategory) addCategory = CATEGORIES[0];
+    CATEGORIES.forEach(c => {
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (c === addCategory ? ' active' : '');
+      chip.textContent = c;
+      chip.onclick = () => {
+        addCategory = c;
+        catsBox.querySelectorAll('.chip').forEach(x => x.classList.toggle('active', x.textContent === c));
+      };
+      catsBox.appendChild(chip);
+    });
+  } else {
+    // 单品类态：品类=当前抽屉，不再问
+    addCategory = currentChip;
+    catsBox.classList.add('hidden');
+  }
   document.getElementById('sheet').classList.remove('hidden');
 }
 function closeSheet() {
