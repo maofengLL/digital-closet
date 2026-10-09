@@ -123,7 +123,7 @@ button:active { transform: scale(.96); opacity: .7; }
 /* 卡片动画：背景淡入 + 卡片缩放上浮 */
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 @keyframes popIn { from { opacity: 0; transform: scale(.94) translateY(8px) } to { opacity: 1; transform: none } }
-}
+
 
 /* ===== 筛选条：药丸 + 下拉面板 ===== */
 .filter-bar { position: relative; display: flex; justify-content: flex-start; align-items: center; }
