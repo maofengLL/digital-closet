@@ -209,3 +209,7 @@ button:active { transform: scale(.96); opacity: .7; }
 /* ===== 细节打磨：间距与多选让位 ===== */
 .filter-bar { margin-bottom: 12px; }           /* 网格与筛选条/药丸之间留距 */
 body.selecting main { padding-top: 56px; }     /* 多选时给悬浮顶栏让位 */
+
+/* ===== S1 动画隔离遮罩层：透明、不挡触摸 ===== */
+.anim-mask { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
+.chip-ghost { white-space: nowrap; }   /* 禁止文字换行，坐标以写死宽度为准 */
