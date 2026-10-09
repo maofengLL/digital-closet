@@ -182,8 +182,6 @@ function onChipClick(cat) {
   row.classList.add('hidden');
   const pill = document.getElementById('pillBtn');
   pill.classList.add('hidden');
-  const barLeft = document.getElementById('filterBar').getBoundingClientRect().left;
-  pill.style.marginLeft = Math.max(0, targetRect.left - barLeft) + 'px';
   document.getElementById('pillText').textContent = cat;
   renderApp(false);   // 网格直接切换（不动筛选条，动画由本函数接管）
 
