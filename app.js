@@ -567,7 +567,7 @@ window.addEventListener('popstate', () => {
 
 function updateSelectUI() {
   document.body.classList.toggle('selecting', selectMode);
-  document.getElementById('filterBar').classList.toggle('hidden', selectMode);
+  document.getElementById('filterBar').style.visibility = selectMode ? 'hidden' : '';   // 隐身但占位，布局不动
   document.getElementById('normalHeader').classList.toggle('hidden', selectMode);
   document.getElementById('selectBar').classList.toggle('hidden', !selectMode);
   document.getElementById('manageBar').classList.toggle('hidden', !selectMode);
