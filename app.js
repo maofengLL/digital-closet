@@ -949,7 +949,7 @@ const CARE_CAT_DEFAULTS = {
   '上装': { materials: ['棉'], wash: '机洗', waterTemp: '30°C以下', bleach: '不可漂白', dry: '可烘干', iron: '中高温熨' },
   '裤装': { materials: ['棉'], wash: '机洗', waterTemp: '30°C以下', bleach: '', dry: '', iron: '' },
   '外套': { materials: ['涤纶'], wash: '机洗', waterTemp: '30°C以下', bleach: '', dry: '', iron: '' },
-  '裙装': { materials: ['粘胶/莫代尔'], wash: '手洗', waterTemp: '', bleach: '', dry: '', iron: '' }
+  '裙装': { materials: [], wash: '手洗', waterTemp: '', bleach: '', dry: '', iron: '' }
 };
 
 let careQuiz = null;   // { itemId, mode, answers: {...} }
