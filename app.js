@@ -99,14 +99,7 @@ function renderApp() {
   loadAll(() => {
     document.getElementById('totalCount').textContent = allItems.length;
 
-    // 筛选提示行
-    const hint = document.getElementById('filterHint');
-    if (currentChip === '全部') {
-      hint.classList.add('hidden');
-    } else {
-      hint.textContent = `只显示「${currentChip}」抽屉 · 点「全部」恢复整柜`;
-      hint.classList.remove('hidden');
-    }
+ 
 
     if (currentChip === '全部') renderBlocks();
     else renderGrid(currentChip);
