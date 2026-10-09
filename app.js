@@ -24,6 +24,7 @@ let allItems = [];
 // 应用启动入口（由数据库开门成功后调用，见 dbReq.onsuccess）
 function startApp() {
   renderChips();
+  buildDropChips();
   renderApp();
 }
 
@@ -94,19 +95,19 @@ function loadAll(cb) {
   };
 }
 
-// ---------- 渲染入口 ----------
-function renderApp() {
+function renderApp(syncBar = true) {
   loadAll(() => {
     document.getElementById('totalCount').textContent = allItems.length;
-
- 
-
+    if (syncBar) syncFilterBar();
     if (currentChip === '全部') renderBlocks();
     else renderGrid(currentChip);
   });
 }
 
-// ---------- 筛选 chips ----------
+// ---------- 筛选条：全部态=整排chips；单品类态=药丸+下拉面板 ----------
+let animToken = 0;      // 动画令牌：任何新操作使旧动画立即作废（可打断纪律）
+let dropOpen = false;
+
 function renderChips() {
   const box = document.getElementById('chipRow');
   box.innerHTML = '';
@@ -115,15 +116,188 @@ function renderChips() {
     b.className = 'tab';
     b.textContent = t;
     b.dataset.name = t;
-    b.onclick = () => { currentChip = t; refreshChips(); renderApp(); };
+    b.onclick = () => onChipClick(t);   // S1：收牌成药丸
     box.appendChild(b);
   });
 }
 
-function refreshChips() {
-  document.querySelectorAll('#chipRow .tab').forEach(b => {
-    b.classList.toggle('active', b.dataset.name === currentChip);
+// 面板内的 chips（两排，4列）
+function buildDropChips() {
+  const box = document.getElementById('dropChips');
+  box.innerHTML = '';
+  ['全部', ...CATEGORIES].forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.textContent = t;
+    b.dataset.name = t;
+    b.onclick = () => onDropPick(t);
+    box.appendChild(b);
   });
+}
+
+// 渲染后同步筛选条形态（全部=整排；单品类=药丸）
+function syncFilterBar() {
+  const token = ++animToken;
+  killGhosts();
+  closeDropInstant();
+  document.getElementById('chipRow').classList.toggle('hidden', currentChip !== '全部');
+  const pill = document.getElementById('pillBtn');
+  pill.classList.toggle('hidden', currentChip === '全部');
+  if (currentChip !== '全部') {
+    document.getElementById('pillText').textContent = currentChip;
+    pill.style.marginLeft = '0px';
+  }
+}
+
+function killGhosts() {
+  document.querySelectorAll('.chip-ghost').forEach(g => g.remove());
+}
+
+// S1：全部态点某 chip → 收牌成药丸（collect）
+function onChipClick(cat) {
+  if (cat === currentChip) return;
+  const token = ++animToken;
+  killGhosts();
+  const row = document.getElementById('chipRow');
+  const chips = Array.from(row.children);
+  const target = chips.find(c => c.dataset.name === cat);
+  if (!target) return;
+  const targetRect = target.getBoundingClientRect();
+  const targetX = targetRect.left + targetRect.width / 2;
+
+  // 造幽灵克隆，记录各自位置，准备收向目标点
+  const ghosts = chips.map(ch => {
+    const r = ch.getBoundingClientRect();
+    const g = ch.cloneNode(true);
+    g.className = 'tab chip-ghost';
+    g.style.left = r.left + 'px';
+    g.style.top = r.top + 'px';
+    g.style.width = r.width + 'px';
+    document.body.appendChild(g);
+    return { el: g, dx: targetX - (r.left + r.width / 2) };
+  });
+
+  // 布局切到药丸态（药丸先藏着，收牌完成后才淡入）
+  currentChip = cat;
+  row.classList.add('hidden');
+  const pill = document.getElementById('pillBtn');
+  pill.classList.add('hidden');
+  const barLeft = document.getElementById('filterBar').getBoundingClientRect().left;
+  pill.style.marginLeft = Math.max(0, targetRect.left - barLeft) + 'px';
+  document.getElementById('pillText').textContent = cat;
+  renderApp(false);   // 网格直接切换（不动筛选条，动画由本函数接管）
+
+  // 下一帧：所有幽灵向目标点收缩+淡出（150-200ms）
+  requestAnimationFrame(() => {
+    ghosts.forEach(o => {
+      o.el.style.transform = `translateX(${o.dx}px) scale(.2)`;
+      o.el.style.opacity = '0';
+    });
+  });
+
+  setTimeout(() => {
+    if (token !== animToken) return;   // 可打断：令牌过期就什么也不做
+    killGhosts();
+    pill.classList.remove('hidden');   // 药丸淡入（fade）
+  }, 190);
+}
+
+// S2：点药丸 → 打开面板（下滑+淡入，随后 deal 发牌）
+function openDrop() {
+  const token = ++animToken;
+  killGhosts();
+  dropOpen = true;
+  const mask = document.getElementById('dropMask');
+  const panel = document.getElementById('dropPanel');
+  panel.querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.name === currentChip);
+  });
+  mask.classList.remove('hidden');
+  panel.classList.remove('hidden');
+  // deal：chips 从左到右依次翻出，间隔 35ms
+  const chips = Array.from(document.getElementById('dropChips').children);
+  chips.forEach(c => {
+    c.style.transition = 'none';
+    c.classList.remove('dealt');
+  });
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    chips.forEach((c, i) => {
+      c.style.transitionDelay = (i * 35) + 'ms';
+      c.classList.add('dealt');
+    });
+  }));
+}
+
+// S3/S5：取消（淡出150ms，药丸与网格不变）
+function cancelDrop() {
+  const token = ++animToken;
+  const mask = document.getElementById('dropMask');
+  const panel = document.getElementById('dropPanel');
+  mask.style.opacity = '0';
+  panel.style.opacity = '0';
+  setTimeout(() => {
+    if (token !== animToken) return;
+    closeDropInstant();
+  }, 150);
+}
+
+function closeDropInstant() {
+  dropOpen = false;
+  const mask = document.getElementById('dropMask');
+  const panel = document.getElementById('dropPanel');
+  mask.classList.add('hidden');
+  panel.classList.add('hidden');
+  mask.style.opacity = '';
+  panel.style.opacity = '';
+  panel.querySelectorAll('.chip').forEach(c => { c.style.transitionDelay = ''; });
+}
+
+// S4：点另一个品类=无动画直切｜S5：点当前品类=取消｜S6：点全部=铺开发牌
+function onDropPick(cat) {
+  const token = ++animToken;
+  killGhosts();
+  if (cat === currentChip) { cancelDrop(); return; }          // S5
+  closeDropInstant();
+  if (cat === '全部') {
+    currentChip = '全部';
+    renderApp();
+  } else {
+    currentChip = cat;                                        // S4：无动画，直接换
+    document.getElementById('pillText').textContent = cat;
+    renderApp();
+  }
+}
+
+// S6：chips 从药丸位置向两侧依次铺开（deal 镜像，约200ms）
+function spreadChips() {
+  const token = ++animToken;
+  const pill = document.getElementById('pillBtn');
+  const originX = pill.getBoundingClientRect().left + pill.getBoundingClientRect().width / 2;
+  pill.classList.add('hidden');
+  const row = document.getElementById('chipRow');
+  row.classList.remove('hidden');
+  const chips = Array.from(row.children);
+  // 起点：全部叠在药丸位置（透明）
+  chips.forEach(c => {
+    const r = c.getBoundingClientRect();
+    const dx = originX - (r.left + r.width / 2);
+    c.style.transition = 'none';
+    c.style.transform = `translateX(${dx}px)`;
+    c.style.opacity = '0';
+  });
+  // 下一帧：各自滑回本位，约35ms间隔
+  requestAnimationFrame(() => {
+    chips.forEach((c, i) => {
+      c.style.transition = 'transform .18s ease, opacity .18s ease';
+      c.style.transitionDelay = (i * 30) + 'ms';
+      c.style.transform = '';
+      c.style.opacity = '';
+    });
+  });
+  setTimeout(() => {
+    if (token !== animToken) return;
+    chips.forEach(c => { c.style.transition = ''; c.style.transitionDelay = ''; });
+  }, 450);
 }
 
 // ---------- 全部：抽屉堆叠 ----------
@@ -145,7 +319,7 @@ function renderBlocks() {
     const head = document.createElement('div');
     head.className = 'section-head tap';
     head.innerHTML = `<span class="name">${cat}</span><span class="count">${items.length} 件 ›</span>`;
-    head.onclick = () => { currentChip = cat; refreshChips(); renderApp(); };
+    head.onclick = () => { currentChip = cat; renderApp(); };
     sec.appendChild(head);
 
     if (items.length === 0) {
@@ -308,7 +482,6 @@ function saveAndExit() {
   saveCurrent(() => {
     document.getElementById('preview').classList.add('hidden');
     currentChip = savedCat;
-    refreshChips();
     renderApp();
   });
 }
