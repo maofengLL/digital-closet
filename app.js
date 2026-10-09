@@ -411,6 +411,14 @@ function renderBlocks() {
         d.appendChild(img);
         const badge = document.createElement('span');
         badge.className = 'check-badge';
+        if (item.careVerified && item.careCompletedAt) {
+          const st = document.createElement('span');
+          st.className = 'card-stamp';
+          const dd = new Date(item.careCompletedAt);
+          st.textContent = (dd.getMonth() + 1) + '.' + dd.getDate();
+          if (item.id === pendingStampId) { st.classList.add('stamping'); pendingStampId = null; }
+          d.appendChild(st);
+        }
         d.appendChild(badge);
         d.addEventListener('click', () => { if (justDragged()) return; if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image); });
         bindSortable(d, {
@@ -451,6 +459,14 @@ function renderGrid(cat) {
     div.appendChild(img);
     const badge = document.createElement('span');
     badge.className = 'check-badge';
+    if (item.careVerified && item.careCompletedAt) {
+      const st = document.createElement('span');
+      st.className = 'card-stamp';
+      const dd = new Date(item.careCompletedAt);
+      st.textContent = (dd.getMonth() + 1) + '.' + dd.getDate();
+      if (item.id === pendingStampId) { st.classList.add('stamping'); pendingStampId = null; }
+      div.appendChild(st);
+    }
     div.appendChild(badge);
     div.addEventListener('click', () => { if (justDragged()) return; if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image); });
     bindSortable(div, {
@@ -534,6 +550,7 @@ function reenter() {
 
 // ---------- 录入闭环：确认页 → 问卷 → 保存 → 盖章 → 落柜 ----------
 let pendingEntry = null;   // 确认页与问卷之间的暂存：{ photo, category, after: 'exit'|'next' }
+let pendingStampId = null;   // 待盖戳的衣服id（本次启动首件录入）
 let entryCount = 0;        // 本次启动已录入件数：首件完整邮戳，其余轻量
 
 // 确认页"确认/下一张"：不直接保存，暂存后进问卷（默认精简形态）
@@ -596,8 +613,10 @@ function saveEntryItem(care, verified, after) {
   if (verified) item.careCompletedAt = Date.now();
   try {
     const tx = db.transaction('clothes', 'readwrite');
-    tx.objectStore('clothes').add(item);
-    tx.oncomplete = () => finishEntry(after);
+    const req = tx.objectStore('clothes').add(item);
+    let newId = null;
+    req.onsuccess = e => { newId = e.target.result; };   // 拿到新衣服的id
+    tx.oncomplete = () => finishEntry(after, newId);
     tx.onerror = () => alert('保存失败：' + tx.error.message);
   } catch (err) {
     alert('出错了：' + err.message);
@@ -605,13 +624,15 @@ function saveEntryItem(care, verified, after) {
 }
 
 // 保存完成：盖章 → 刷新落到单品类网格（首格可见）→ "下一张"则继续录
-function finishEntry(after) {
+function finishEntry(after, newId) {
   const savedCat = pendingEntry.category;
   currentChip = savedCat;
   pendingEntry = null;
+  const isFirst = entryCount === 0;      // 盖戳动画只给本次启动的第一件
   loadAll(() => {
     playStamp();
-    renderApp();
+    pendingStampId = isFirst ? newId : null;
+    renderApp();                           // 渲染时给新卡的戳加 stamping 动画
     if (after === 'next') openSheet();
   });
 }
@@ -619,19 +640,7 @@ function finishEntry(after) {
 // 盖章动画：首件完整邮戳（约1秒），其后轻量对勾（约300ms），不挡操作
 function playStamp() {
   entryCount++;
-  if (entryCount === 1) {
-    const d = new Date();
-    document.getElementById('stampDate').textContent = (d.getMonth() + 1) + '月' + d.getDate() + '日';
-    const s = document.getElementById('stamp');
-    s.classList.remove('hidden');
-    showToast('档案建好咯');
-    setTimeout(() => s.classList.add('hidden'), 1000);
-  } else {
-    const m = document.getElementById('miniCheck');
-    m.classList.remove('hidden');
-    showToast('档案建好');
-    setTimeout(() => m.classList.add('hidden'), 300);
-  }
+  showToast(entryCount === 1 ? '档案建好咯' : '档案建好');
 }
 
 // ---------- 排序系统：长按拖拽 + FLIP让位（纯JS，无库） ----------
