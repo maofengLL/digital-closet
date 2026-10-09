@@ -17,9 +17,13 @@
 
   <!-- 唯一页面：抽屉柜 -->
   <main>
-    <!-- 筛选 chips -->
-    <div id="chipRow" class="tabs"></div>
-
+     <!-- 筛选条：全部态=整排chips；单品类态=药丸+下拉面板 -->
+    <div id="filterBar" class="filter-bar">
+      <div id="chipRow" class="tabs"></div>
+      <button id="pillBtn" class="pill hidden" onclick="openDrop()"><span id="pillText">全部</span><span class="pill-arrow">▾</span></button>
+      <div id="dropMask" class="drop-mask hidden" onclick="cancelDrop()"></div>
+      <div id="dropPanel" class="drop-panel hidden"><div id="dropChips" class="drop-chips"></div></div>
+    </div>
 
     <!-- 全部：抽屉区块堆叠 -->
     <div id="blocksBox"></div>
