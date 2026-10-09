@@ -23,6 +23,8 @@ let allItems = [];
 
 // 应用启动入口（由数据库开门成功后调用，见 dbReq.onsuccess）
 function startApp() {
+  // 全局禁掉长按弹出的浏览器菜单（保存图片/复制/分享）
+  document.addEventListener('contextmenu', e => e.preventDefault());
   renderChips();
   buildDropChips();
   renderApp();
