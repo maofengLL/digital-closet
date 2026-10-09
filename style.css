@@ -148,6 +148,59 @@ button:active { transform: scale(.96); opacity: .7; }
 .drop-chips { display: grid; grid-template-columns: repeat(4, auto); gap: 8px; }
 .drop-chips .chip { opacity: 0; transform: translateY(-6px); transition: opacity .18s ease, transform .18s ease; }
 .drop-chips .chip.dealt { opacity: 1; transform: none; }
+
+/* ===== 长按多选管理模式 ===== */
+.thumb, .hthumb { position: relative; }   /* 徽标定位锚点 */
+
+/* 管理顶栏 */
+.select-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 15;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; background: #fff; border-bottom: 1px solid #E5E2DA;
+  animation: fadeIn .15s ease;
+}
+.select-bar .sel-count { font-size: 15px; font-weight: 600; }
+.select-bar button { font-size: 15px; color: #2B2B2B; background: none; border: none; padding: 4px 8px; }
+
+/* 管理底栏：只许两个按钮 */
+.manage-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 15;
+  display: flex; gap: 10px; padding: 14px 16px 20px;
+  background: #fff; border-top: 1px solid #E5E2DA;
+  animation: slideUp .18s ease;
+}
+.manage-bar button { flex: 1; padding: 14px 0; font-size: 16px; border: none; border-radius: 12px; background: #F3F1EA; color: #2B2B2B; }
+.manage-bar button.danger-btn { background: #B4432F; color: #fff; }
+.manage-bar button:disabled { opacity: .4; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: none; } }
+
+/* 选中态：描边 + 勾选徽标（轻微上浮） */
+.thumb.selected, .hthumb.selected {
+  outline: 2px solid #2B2B2B; outline-offset: -2px;
+  transform: translateY(-2px);
+}
+.check-badge {
+  display: none;
+  position: absolute; top: 6px; right: 6px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(255,255,255,.9); border: 1.5px solid #B8B4AA;
+  align-items: center; justify-content: center;
+}
+.thumb.selected .check-badge, .hthumb.selected .check-badge {
+  display: flex; background: #2B2B2B; border-color: #2B2B2B;
+}
+.thumb.selected .check-badge::after, .hthumb.selected .check-badge::after {
+  content: '✓'; color: #fff; font-size: 13px;
+}
+
+/* 移到抽屉面板的 chips */
+.move-chips { display: grid; grid-template-columns: repeat(4, auto); gap: 8px; margin: 8px 0; }
+
+/* 删除确认弹窗按钮行 */
+.confirm-btns { display: flex; gap: 10px; margin-top: 18px; }
+.confirm-btns button { flex: 1; padding: 12px 0; font-size: 16px; border: none; border-radius: 12px; }
+.confirm-cancel { background: #F3F1EA; color: #2B2B2B; }
+.confirm-ok { background: #B4432F; color: #fff; font-weight: 600; }
 .drop-chips .chip.active { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
 
 /* 收牌用的幽灵克隆 */
