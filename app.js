@@ -87,7 +87,7 @@ function showToast(text) {
   toastTimer = setTimeout(() => t.classList.add('hidden'), 1500);
 }
 // ---------- 数据层 v3：衣物档案（阶段②） ----------
-const SCHEMA_VERSION = 3;                 // 数据结构版本号
+const SCHEMA_VERSION = 4;                 // 数据结构版本号
 const SCHEMA_KEY = 'closetSchemaVersion'; // localStorage 里记录版本，避免每次启动重跑
 
 // 新记录的档案默认值（所有空串 = 未知/未填，不用 null）
@@ -97,7 +97,8 @@ function newArchive() {
     careVerified: false,                 // 只有用户亲手核对过问卷才置 true
     meta: { purchaseDate: '', status: '在穿' },
     notes: [],
-    photos: { standard: '' }             // 占位：blob 存储无路径，步骤6产出标准图后填入
+    photos: { standard: '' },            // 占位：blob 存储无路径，步骤6产出标准图后填入
+    careCompletedAt: ''                  // 问卷确认时间戳（跳过不写入；空串=未确认过）
   };
 }
 
@@ -118,6 +119,7 @@ function migrateItem(item) {
   }
   if (!Array.isArray(item.notes)) item.notes = [];
   if (!item.photos) item.photos = { standard: '' };
+  if (item.careCompletedAt === undefined || item.careCompletedAt === null) item.careCompletedAt = '';
   return item;
 }
 
@@ -530,55 +532,100 @@ function reenter() {
   openSheet();
 }
 
-function saveCurrent(done) {
+// ---------- 录入闭环：确认页 → 问卷 → 保存 → 盖章 → 落柜 ----------
+let pendingEntry = null;   // 确认页与问卷之间的暂存：{ photo, category, after: 'exit'|'next' }
+let entryCount = 0;        // 本次启动已录入件数：首件完整邮戳，其余轻量
+
+// 确认页"确认/下一张"：不直接保存，暂存后进问卷（默认精简形态）
+function prepareEntry(after) {
   if (!currentPhoto) { alert('请先选择照片'); return; }
   if (!db) { alert('数据库还没准备好，请等一秒再点'); return; }
-  const btn = document.getElementById('confirmBtn');
-  btn.textContent = '保存中…';
-  btn.disabled = true;
+  pendingEntry = { photo: currentPhoto, category: addCategory, after: after };
+  currentPhoto = null;
+  document.getElementById('preview').classList.add('hidden');
+  openCareEntry('lite');
+}
+
+function saveAndExit() { prepareEntry('exit'); }
+function saveAndNext() { prepareEntry('next'); }
+
+// 问卷页（录入模式）：预选=历史继承/品类默认
+function openCareEntry(mode) {
+  if (!pendingEntry) return;
+  const pre = carePrefill({ category: pendingEntry.category });
+  careQuiz = { itemId: null, mode: mode, answers: pre, entry: true, after: pendingEntry.after };
+  renderCareQuiz();
+  document.getElementById('careMask').classList.remove('hidden');
+}
+
+// 精简→全量切换（顶部小字入口）
+function careSwitchFull() {
+  if (!careQuiz) return;
+  careQuiz.mode = 'full';
+  renderCareQuiz();
+}
+
+// 问卷页返回键：回确认页，不保存问卷数据
+function careBack() {
+  const photo = pendingEntry ? pendingEntry.photo : null;
+  closeCareQuiz();
+  if (photo) {
+    currentPhoto = photo;
+    document.getElementById('previewImg').src = URL.createObjectURL(photo);
+    document.getElementById('preview').classList.remove('hidden');
+  }
+}
+
+// 问卷确认后的真正入库
+function saveEntryItem(care, verified, after) {
+  showToast('保存中…');
+  const item = {
+    image: pendingEntry.photo,
+    category: pendingEntry.category,
+    time: Date.now(),
+    ...newArchive(),
+    care: care,
+    careVerified: verified
+  };
+  if (verified) item.careCompletedAt = Date.now();
   try {
     const tx = db.transaction('clothes', 'readwrite');
-      tx.objectStore('clothes').add({
-      image: currentPhoto,
-      category: addCategory,
-      time: Date.now(),
-      ...newArchive()   // 新记录默认带全部档案字段
-    });
-    tx.oncomplete = () => {
-      currentPhoto = null;
-      btn.textContent = '确认';
-      btn.disabled = false;
-      showToast('已保存');
-      done();
-    };
-    tx.onerror = () => {
-      btn.textContent = '确认';
-      btn.disabled = false;
-      alert('保存失败：' + tx.error.message);
-    };
+    tx.objectStore('clothes').add(item);
+    tx.oncomplete = () => finishEntry(after);
+    tx.onerror = () => alert('保存失败：' + tx.error.message);
   } catch (err) {
-    btn.textContent = '确认';
-    btn.disabled = false;
     alert('出错了：' + err.message);
   }
 }
 
-// 确认：保存 → 直接拉到刚录入的那个抽屉，当场看到
-function saveAndExit() {
-  const savedCat = addCategory;
-  saveCurrent(() => {
-    document.getElementById('preview').classList.add('hidden');
-    currentChip = savedCat;
+// 保存完成：盖章 → 刷新落到单品类网格（首格可见）→ "下一张"则继续录
+function finishEntry(after) {
+  const savedCat = pendingEntry.category;
+  currentChip = savedCat;
+  pendingEntry = null;
+  loadAll(() => {
+    playStamp();
     renderApp();
+    if (after === 'next') openSheet();
   });
 }
 
-// 下一张：保存 → 打开面板接着录（批量，品类沿用）
-function saveAndNext() {
-  saveCurrent(() => {
-    document.getElementById('preview').classList.add('hidden');
-    openSheet();
-  });
+// 盖章动画：首件完整邮戳（约1秒），其后轻量对勾（约300ms），不挡操作
+function playStamp() {
+  entryCount++;
+  if (entryCount === 1) {
+    const d = new Date();
+    document.getElementById('stampDate').textContent = (d.getMonth() + 1) + '月' + d.getDate() + '日';
+    const s = document.getElementById('stamp');
+    s.classList.remove('hidden');
+    showToast('档案建好咯');
+    setTimeout(() => s.classList.add('hidden'), 1000);
+  } else {
+    const m = document.getElementById('miniCheck');
+    m.classList.remove('hidden');
+    showToast('档案建好');
+    setTimeout(() => m.classList.add('hidden'), 300);
+  }
 }
 
 // ---------- 排序系统：长按拖拽 + FLIP让位（纯JS，无库） ----------
@@ -1018,6 +1065,8 @@ function renderCareQuiz() {
   });
   // 跳过按钮仅精简形态有
   document.getElementById('careSkipBtn').classList.toggle('hidden', careQuiz.mode !== 'lite');
+  document.getElementById('careToFull').classList.toggle('hidden', careQuiz.mode !== 'lite');   // 仅精简可切全量
+  document.getElementById('careBackBtn').classList.toggle('hidden', !careQuiz.entry);           // 仅录入流程有返回键
 }
 
 function pickCare(key, op) {
@@ -1041,6 +1090,7 @@ function writeCare(itemId, care, verified) {
     if (!item) return;
     item.care = care;
     item.careVerified = verified;
+    if (verified) item.careCompletedAt = Date.now();   // 跳过不写
     store.put(item);
   };
   tx.oncomplete = () => {
@@ -1051,21 +1101,30 @@ function writeCare(itemId, care, verified) {
 
 function careConfirm() {
   const a = careQuiz.answers;
-  writeCare(careQuiz.itemId, {
+  const care = {
     materials: a.materials.slice(), wash: a.wash, waterTemp: a.waterTemp,
     bleach: a.bleach, dry: a.dry, iron: a.iron
-  }, true);
-  closeCareQuiz();
+  };
+  if (careQuiz.entry) {
+    const after = careQuiz.after;
+    closeCareQuiz();
+    saveEntryItem(care, true, after);      // 录入模式：确认后直接入库
+  } else {
+    writeCare(careQuiz.itemId, care, true); // 大图模式（步骤4纸张页用）
+    closeCareQuiz();
+  }
 }
 
 function careSkip() {
-  const item = allItems.find(i => i.id === careQuiz.itemId);
-  const def = (item && CARE_CAT_DEFAULTS[item.category]) || {};
-  writeCare(careQuiz.itemId, {
+  if (!careQuiz || !careQuiz.entry) return;   // 跳过仅录入流程提供
+  const def = CARE_CAT_DEFAULTS[pendingEntry.category] || {};
+  const care = {
     materials: (def.materials || []).slice(), wash: def.wash || '', waterTemp: def.waterTemp || '',
     bleach: def.bleach || '', dry: def.dry || '', iron: def.iron || ''
-  }, false);
+  };
+  const after = careQuiz.after;
   closeCareQuiz();
+  saveEntryItem(care, false, after);          // 跳过：careVerified=false，不写时间戳
 }
 
 function closeCareQuiz() {
@@ -1073,18 +1132,7 @@ function closeCareQuiz() {
   document.getElementById('careMask').classList.add('hidden');
 }
 
-// 测试入口：大图页点"问卷(测试)" → 选形态
-function openCareMode() {
-  if (currentViewId === null) return;
-  document.getElementById('careModeMask').classList.remove('hidden');
-}
-function closeCareMode() {
-  document.getElementById('careModeMask').classList.add('hidden');
-}
-function startCare(mode) {
-  closeCareMode();
-  openCareQuiz(currentViewId, mode);
-}
+
 // ---------- 删除 ----------
 function deleteCloth(id) {
   if (!confirm('确定删除这件衣服吗？')) return;
