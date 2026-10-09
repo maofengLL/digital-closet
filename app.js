@@ -139,6 +139,8 @@ function buildDropChips() {
 function syncFilterBar() {
   const token = ++animToken;
   killGhosts();
+  document.getElementById('chipRow').style.visibility = '';   // 防S1中断残留
+  document.body.style.overflow = '';
   closeDropInstant();
   document.getElementById('chipRow').classList.toggle('hidden', currentChip !== '全部');
   const pill = document.getElementById('pillBtn');
@@ -150,10 +152,10 @@ function syncFilterBar() {
 }
 
 function killGhosts() {
-  document.querySelectorAll('.chip-ghost').forEach(g => g.remove());
+  document.querySelectorAll('.chip-ghost, .anim-mask').forEach(g => g.remove());
 }
 
-// S1：全部态点某 chip → 收牌成药丸（collect）
+// S1：全部态点某 chip → 收牌成药丸（FLIP：动画层隔离，布局零跳动）
 function onChipClick(cat) {
   if (cat === currentChip) return;
   const token = ++animToken;
@@ -165,7 +167,10 @@ function onChipClick(cat) {
   const targetRect = target.getBoundingClientRect();
   const targetX = targetRect.left + targetRect.width / 2;
 
-  // 造幽灵克隆，记录各自位置，准备收向目标点
+  // 1. 动画层隔离：克隆全部 chip 到固定遮罩层；原行 visibility:hidden 但保留占位
+  //    （行高不变 → 下方照片纹丝不动；宽度写死 + nowrap → 文字不换行）
+  const mask = document.createElement('div');
+  mask.className = 'anim-mask';
   const ghosts = chips.map(ch => {
     const r = ch.getBoundingClientRect();
     const g = ch.cloneNode(true);
@@ -173,19 +178,14 @@ function onChipClick(cat) {
     g.style.left = r.left + 'px';
     g.style.top = r.top + 'px';
     g.style.width = r.width + 'px';
-    document.body.appendChild(g);
+    mask.appendChild(g);
     return { el: g, dx: targetX - (r.left + r.width / 2) };
   });
+  document.body.appendChild(mask);
+  row.style.visibility = 'hidden';
+  document.body.style.overflow = 'hidden';   // 动画期锁滚动，网格冻结
 
-  // 布局切到药丸态（药丸先藏着，收牌完成后才淡入）
-  currentChip = cat;
-  row.classList.add('hidden');
-  const pill = document.getElementById('pillBtn');
-  pill.classList.add('hidden');
-  document.getElementById('pillText').textContent = cat;
-  renderApp(false);   // 网格直接切换（不动筛选条，动画由本函数接管）
-
-  // 下一帧：所有幽灵向目标点收缩+淡出（150-200ms）
+  // 2. 下一帧：收牌（向目标中心收缩+淡出，180ms）
   requestAnimationFrame(() => {
     ghosts.forEach(o => {
       o.el.style.transform = `translateX(${o.dx}px) scale(.2)`;
@@ -193,10 +193,19 @@ function onChipClick(cat) {
     });
   });
 
+  // 3. 收尾换帧：一次性完成（撤遮罩→撤占位→药丸淡入→网格才切换）
+  //    全部发生在同一帧内 = 用户只感知到一次变化，没有第二次跳动
   setTimeout(() => {
-    if (token !== animToken) return;   // 可打断：令牌过期就什么也不做
-    killGhosts();
-    pill.classList.remove('hidden');   // 药丸淡入（fade）
+    if (token !== animToken) return;   // 可打断：令牌过期直接退出
+    mask.remove();
+    row.style.visibility = '';
+    row.classList.add('hidden');
+    document.body.style.overflow = '';
+    currentChip = cat;
+    const pill = document.getElementById('pillBtn');
+    document.getElementById('pillText').textContent = cat;
+    pill.classList.remove('hidden');   // 药丸在左对齐位置淡入
+    renderApp(false);                  // 照片此刻才原地变成筛选结果
   }, 190);
 }
 
