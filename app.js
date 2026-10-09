@@ -566,7 +566,8 @@ window.addEventListener('popstate', () => {
 });
 
 function updateSelectUI() {
-    document.body.classList.toggle('selecting', selectMode);
+  document.body.classList.toggle('selecting', selectMode);
+  document.getElementById('filterBar').classList.toggle('hidden', selectMode);
   document.getElementById('normalHeader').classList.toggle('hidden', selectMode);
   document.getElementById('selectBar').classList.toggle('hidden', !selectMode);
   document.getElementById('manageBar').classList.toggle('hidden', !selectMode);
