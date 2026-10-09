@@ -226,3 +226,16 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
 .tab.all-chip { font-weight: 700; }   /* "全部"视觉突出 */
 
 .drag-float { white-space: nowrap; }   /* 克隆体里文字绝不换行 */
+
+/* ===== 长按手势保护：禁浏览器默认菜单/选中/图片拖拽 ===== */
+#blocksBox, #gridBox, #chipRow, .hrow, .tabs {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;   /* iOS长按不弹"存储图像"菜单 */
+}
+.thumb img, .hthumb img {
+  pointer-events: none;          /* 事件直接落到外层div，图片本身不可成为长按目标 */
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
