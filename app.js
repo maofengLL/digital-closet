@@ -666,6 +666,7 @@ function bindSortable(el, ctx) {
     dragState.active = true;
     suppressClickUntil = Date.now() + 400;
     if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }   // iOS静默
+    el.style.transform = 'scale(1)';   // 抵消全局按压缩放，量出真实尺寸（否则克隆体偏窄→文字竖排）
     const r = el.getBoundingClientRect();
     offX = startX - r.left; offY = startY - r.top;
     floaty = el.cloneNode(true);
@@ -686,6 +687,7 @@ function bindSortable(el, ctx) {
     setTimeout(() => {
       floaty.remove(); floaty = null;
       el.classList.remove('drag-src');
+      el.style.transform = '';   // 归还内联样式
       dragState.active = false;
       suppressClickUntil = Date.now() + 300;   // 吃掉松手后的误点击
       if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
