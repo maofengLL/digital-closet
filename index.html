@@ -10,7 +10,7 @@
 </head>
 <body>
   <!-- 顶栏：标题 + 总数 -->
-    <header>
+     <header id="normalHeader">
     <span>我的衣柜 · 共<span id="totalCount">0</span>件</span>
     <button class="help-btn" onclick="openTip('manual')">?</button>
   </header>
@@ -88,6 +88,38 @@
       <button class="tip-ok" onclick="closeTip()">知道了</button>
     </div>
   </div> 
+    <!-- 管理模式顶栏（长按进入时出现） -->
+  <div id="selectBar" class="select-bar hidden">
+    <button onclick="toggleSelectAll()">全选</button>
+    <span id="selectCount" class="sel-count">已选择0项</span>
+    <button onclick="exitSelectMode()">取消</button>
+  </div>
+
+  <!-- 管理模式底栏（只许两个按钮） -->
+  <div id="manageBar" class="manage-bar hidden">
+    <button onclick="openMoveSheet()">移到抽屉…</button>
+    <button id="batchDeleteBtn" class="danger-btn" onclick="askBatchDelete()">删除</button>
+  </div>
+
+  <!-- 移到抽屉面板 -->
+  <div id="moveSheet" class="sheet-mask hidden" onclick="closeMoveSheet()">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <p class="tip">移到哪个抽屉？</p>
+      <div id="moveChips" class="move-chips"></div>
+      <button class="sheet-btn cancel" onclick="closeMoveSheet()">取消</button>
+    </div>
+  </div>
+
+  <!-- 删除确认弹窗 -->
+  <div id="confirmMask" class="tip-mask hidden">
+    <div class="tip-card">
+      <p class="tip-line" id="confirmText"></p>
+      <div class="confirm-btns">
+        <button class="confirm-cancel" onclick="closeConfirm()">再想想</button>
+        <button class="confirm-ok" onclick="doBatchDelete()">删除</button>
+      </div>
+    </div>
+  </div>
   <div id="toast" class="toast hidden"></div> 
   <script src="app.js?v=14"></script>
   <script>
