@@ -256,8 +256,9 @@ function onDropPick(cat) {
   killGhosts();
   if (cat === currentChip) { cancelDrop(); return; }          // S5
   closeDropInstant();
-  if (cat === '全部') {
+   if (cat === '全部') {
     currentChip = '全部';
+    spreadChips();
     renderApp();
   } else {
     currentChip = cat;                                        // S4：无动画，直接换
