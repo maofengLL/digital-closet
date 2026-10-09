@@ -288,3 +288,5 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
 
 /* 问卷"切全量"小字入口 */
 .care-to-full { font-size: 12px; color: #8A867D; text-align: center; margin: -6px 0 12px; }
+
+.care-to-full { text-decoration: underline; text-underline-offset: 3px; }   /* 下划线=可点信号 */
