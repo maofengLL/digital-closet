@@ -472,7 +472,7 @@ function openSheet() {
   const catsBox = document.getElementById('sheetCats');
   if (currentChip === '全部') {
     catsBox.classList.remove('hidden');
-    catsBox.innerHT ML = '<p class="tip">这件放进哪个抽屉？</p>';
+    catsBox.innerHTML = '<p class="tip">这件放进哪个抽屉？</p>';
     if (!addCategory) addCategory = catOrder[0];
     catOrder.forEach(c => {
       const chip = document.createElement('button');
