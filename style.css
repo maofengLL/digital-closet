@@ -125,4 +125,30 @@ button:active { transform: scale(.96); opacity: .7; }
 @keyframes popIn { from { opacity: 0; transform: scale(.94) translateY(8px) } to { opacity: 1; transform: none } }
 }
 
+/* ===== 筛选条：药丸 + 下拉面板 ===== */
+.filter-bar { position: relative; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; font-size: 14px; color: #2B2B2B;
+  background: #fff; border: 1px solid #E5E2DA; border-radius: 999px;
+  animation: fadeIn .15s ease;   /* 药丸淡入 */
+}
+.pill-arrow { font-size: 11px; color: #8A867D; }
 
+/* 下拉面板 */
+.drop-mask { position: fixed; inset: 0; z-index: 25; animation: fadeIn .2s ease; transition: opacity .15s ease; }
+.drop-panel {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 26;
+  background: #fff; border: 1px solid #EDE7DA; border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(60,50,30,.15);
+  padding: 12px; width: max-content; max-width: 92vw;
+  animation: dropIn .2s ease; transition: opacity .15s ease;
+}
+@keyframes dropIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.drop-chips { display: grid; grid-template-columns: repeat(4, auto); gap: 8px; }
+.drop-chips .chip { opacity: 0; transform: translateY(-6px); transition: opacity .18s ease, transform .18s ease; }
+.drop-chips .chip.dealt { opacity: 1; transform: none; }
+.drop-chips .chip.active { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
+
+/* 收牌用的幽灵克隆 */
+.chip-ghost { position: fixed; z-index: 60; pointer-events: none; transition: transform .18s ease-in, opacity .18s ease-in; }
