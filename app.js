@@ -931,6 +931,160 @@ function doBatchDelete() {
     };
   });
 }
+// ---------- 洗护问卷（阶段②步骤2，独立组件，测试入口在大图层） ----------
+const CARE_QUESTIONS = {
+  materials: { title: '材质（可多选）', multi: true, options: ['棉', '麻', '丝', '羊毛', '涤纶', '锦纶', '粘胶/莫代尔', '其他'] },
+  wash:      { title: '洗涤方式', options: ['机洗', '手洗', '只干洗', '不可水洗'] },
+  waterTemp: { title: '水温', options: ['30°C以下', '40°C', '60°C', '高温可'] },
+  bleach:    { title: '漂白', options: ['可漂白', '不可漂白'] },
+  dry:       { title: '干燥', options: ['可烘干', '不可烘干', '阴干'] },
+  iron:      { title: '熨烫', options: ['不可熨', '低温熨', '中高温熨'] }
+};
+const CARE_FULL_ORDER = ['materials', 'wash', 'waterTemp', 'bleach', 'dry', 'iron'];
+const CARE_LITE_ORDER = ['materials', 'wash'];
+const CARE_FIELDS = ['materials', 'wash', 'waterTemp', 'bleach', 'dry', 'iron'];
+
+// 品类默认（仅这四类有默认，其余不预选）
+const CARE_CAT_DEFAULTS = {
+  '上装': { materials: ['棉'], wash: '机洗', waterTemp: '30°C以下', bleach: '不可漂白', dry: '可烘干', iron: '中高温熨' },
+  '裤装': { materials: ['棉'], wash: '机洗', waterTemp: '30°C以下', bleach: '', dry: '', iron: '' },
+  '外套': { materials: ['涤纶'], wash: '机洗', waterTemp: '30°C以下', bleach: '', dry: '', iron: '' },
+  '裙装': { materials: ['粘胶/莫代尔'], wash: '手洗', waterTemp: '', bleach: '', dry: '', iron: '' }
+};
+
+let careQuiz = null;   // { itemId, mode, answers: {...} }
+
+// 预选：自己已核对的值 > 同品类最近已核对档案（逐字段回落） > 品类默认
+function carePrefill(item) {
+  const def = CARE_CAT_DEFAULTS[item.category] || {};
+  if (item.careVerified && item.care) return normalizeCare(item.care, def);
+  let hist = null;
+  allItems.forEach(it => {
+    if (it.id !== item.id && it.category === item.category && it.careVerified && it.care) {
+      if (!hist || it.time > hist.time) hist = it.care;
+    }
+  });
+  return normalizeCare(hist || {}, def);
+}
+
+function normalizeCare(src, def) {
+  const pre = {};
+  CARE_FIELDS.forEach(k => {
+    if (k === 'materials') {
+      pre[k] = (Array.isArray(src.materials) && src.materials.length) ? src.materials.slice() : (def.materials || []).slice();
+    } else {
+      pre[k] = (src[k] !== undefined && src[k] !== '') ? src[k] : (def[k] || '');
+    }
+  });
+  return pre;
+}
+
+// 打开问卷。mode: 'full' 全量（标签在手） / 'lite' 精简（标签不在手）
+function openCareQuiz(itemId, mode) {
+  const item = allItems.find(i => i.id === itemId);
+  if (!item) { alert('先等衣柜加载完'); return; }
+  const pre = carePrefill(item);
+  careQuiz = { itemId: itemId, mode: mode, answers: pre };
+  renderCareQuiz();
+  document.getElementById('careMask').classList.remove('hidden');
+}
+
+function renderCareQuiz() {
+  const order = careQuiz.mode === 'full' ? CARE_FULL_ORDER : CARE_LITE_ORDER;
+  const body = document.getElementById('careBody');
+  body.innerHTML = '';
+  order.forEach(key => {
+    // 水温题：仅洗涤方式为机洗/手洗时显示
+    if (key === 'waterTemp' && careQuiz.answers.wash !== '机洗' && careQuiz.answers.wash !== '手洗') return;
+    const q = CARE_QUESTIONS[key];
+    const div = document.createElement('div');
+    div.className = 'care-q';
+    const t = document.createElement('p');
+    t.className = 'care-q-title';
+    t.textContent = q.title;
+    div.appendChild(t);
+    const opts = document.createElement('div');
+    opts.className = 'care-opts';
+    q.options.forEach(op => {
+      const b = document.createElement('button');
+      const sel = (key === 'materials') ? careQuiz.answers.materials.includes(op) : careQuiz.answers[key] === op;
+      b.className = 'care-opt' + (sel ? ' sel' : '');
+      b.textContent = op;
+      b.onclick = () => pickCare(key, op);
+      opts.appendChild(b);
+    });
+    div.appendChild(opts);
+    body.appendChild(div);
+  });
+  // 跳过按钮仅精简形态有
+  document.getElementById('careSkipBtn').classList.toggle('hidden', careQuiz.mode !== 'lite');
+}
+
+function pickCare(key, op) {
+  if (key === 'materials') {
+    const a = careQuiz.answers.materials;
+    const i = a.indexOf(op);
+    if (i >= 0) a.splice(i, 1); else a.push(op);
+  } else {
+    careQuiz.answers[key] = op;
+  }
+  renderCareQuiz();   // 重绘（水温题显隐跟着洗涤方式走）
+}
+
+// 写入档案：verified=true 用户核对 / false 跳过（写品类默认）
+function writeCare(itemId, care, verified) {
+  const tx = db.transaction('clothes', 'readwrite');
+  const store = tx.objectStore('clothes');
+  const req = store.get(itemId);
+  req.onsuccess = () => {
+    const item = req.result;
+    if (!item) return;
+    item.care = care;
+    item.careVerified = verified;
+    store.put(item);
+  };
+  tx.oncomplete = () => {
+    showToast(verified ? '已记录洗护档案' : '已跳过，按品类默认');
+    loadAll(() => {});   // 刷新内存，历史继承立刻可用
+  };
+}
+
+function careConfirm() {
+  const a = careQuiz.answers;
+  writeCare(careQuiz.itemId, {
+    materials: a.materials.slice(), wash: a.wash, waterTemp: a.waterTemp,
+    bleach: a.bleach, dry: a.dry, iron: a.iron
+  }, true);
+  closeCareQuiz();
+}
+
+function careSkip() {
+  const item = allItems.find(i => i.id === careQuiz.itemId);
+  const def = (item && CARE_CAT_DEFAULTS[item.category]) || {};
+  writeCare(careQuiz.itemId, {
+    materials: (def.materials || []).slice(), wash: def.wash || '', waterTemp: def.waterTemp || '',
+    bleach: def.bleach || '', dry: def.dry || '', iron: def.iron || ''
+  }, false);
+  closeCareQuiz();
+}
+
+function closeCareQuiz() {
+  careQuiz = null;
+  document.getElementById('careMask').classList.add('hidden');
+}
+
+// 测试入口：大图页点"问卷(测试)" → 选形态
+function openCareMode() {
+  if (currentViewId === null) return;
+  document.getElementById('careModeMask').classList.remove('hidden');
+}
+function closeCareMode() {
+  document.getElementById('careModeMask').classList.add('hidden');
+}
+function startCare(mode) {
+  closeCareMode();
+  openCareQuiz(currentViewId, mode);
+}
 // ---------- 删除 ----------
 function deleteCloth(id) {
   if (!confirm('确定删除这件衣服吗？')) return;
