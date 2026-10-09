@@ -262,3 +262,29 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
   background: #2B2B2B; border: none; border-radius: 12px;
 }
 .care-skip { flex: 0 0 auto; background: none; border: none; color: #8A867D; font-size: 13px; padding: 12px 4px; }
+
+/* ===== 录入盖章动画 ===== */
+.stamp { position: fixed; left: 50%; top: 22%; transform: translateX(-50%); z-index: 80; pointer-events: none; }
+.stamp-inner {
+  width: 110px; height: 110px; border-radius: 50%;
+  border: 3px double #2B3A55; background: rgba(255,253,248,.92); color: #2B3A55;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  animation: stampIn .35s ease-out;
+}
+.stamp-title { font-size: 14px; font-weight: 700; letter-spacing: 2px; }
+.stamp-date { font-size: 11px; margin-top: 4px; }
+@keyframes stampIn {
+  0% { transform: scale(1.8); opacity: 0; }
+  60% { transform: scale(.95); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.mini-check {
+  position: fixed; left: 50%; top: 30%; transform: translateX(-50%);
+  z-index: 80; width: 44px; height: 44px; border-radius: 50%;
+  background: #2B3A55; color: #fff; font-size: 24px;
+  display: flex; align-items: center; justify-content: center;
+  animation: stampIn .25s ease-out; pointer-events: none;
+}
+
+/* 问卷"切全量"小字入口 */
+.care-to-full { font-size: 12px; color: #8A867D; text-align: center; margin: -6px 0 12px; }
