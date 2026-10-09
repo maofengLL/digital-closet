@@ -239,3 +239,26 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* ===== 洗护问卷 ===== */
+.care-card {
+  width: 88%; max-width: 360px; max-height: 78vh; overflow-y: auto;
+  background: #FFFDF8; border: 1px solid #EDE7DA; border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(60,50,30,.18), 0 2px 8px rgba(60,50,30,.08);
+  padding: 20px;
+  animation: popIn .2s ease;
+}
+.care-q { margin-bottom: 14px; }
+.care-q-title { font-size: 14px; font-weight: 600; color: #2B2B2B; margin-bottom: 6px; }
+.care-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.care-opt {
+  padding: 8px 14px; font-size: 14px; color: #2B2B2B;
+  background: #fff; border: 1px solid #E5E2DA; border-radius: 999px;
+}
+.care-opt.sel { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
+.care-actions { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.care-ok {
+  flex: 1; padding: 12px 0; font-size: 15px; font-weight: 600; color: #fff;
+  background: #2B2B2B; border: none; border-radius: 12px;
+}
+.care-skip { flex: 0 0 auto; background: none; border: none; color: #8A867D; font-size: 13px; padding: 12px 4px; }
