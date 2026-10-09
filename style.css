@@ -213,3 +213,14 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
 /* ===== S1 动画隔离遮罩层：透明、不挡触摸 ===== */
 .anim-mask { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
 .chip-ghost { white-space: nowrap; }   /* 禁止文字换行，坐标以写死宽度为准 */
+
+/* ===== 拖拽排序 ===== */
+.drag-float {
+  position: fixed; z-index: 70; pointer-events: none;
+  transform: scale(1.08);              /* 抓起态：放大+浮起阴影 */
+  box-shadow: 0 10px 28px rgba(0,0,0,.35);
+  border-radius: 10px;
+}
+.drag-float.dropping { transition: left .1s ease, top .1s ease, transform .1s ease; transform: scale(1); }
+.drag-src { visibility: hidden; }     /* 原位置隐形占位 */
+.tab.all-chip { font-weight: 700; }   /* "全部"视觉突出 */
