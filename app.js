@@ -173,16 +173,8 @@ function renderChips() {
     b.textContent = t;
     b.dataset.name = t;
     b.onclick = () => { if (justDragged()) return; onChipClick(t); };
-    bindSortable(b, {
-      onDragMove: (x) => {
-        const others = Array.from(box.children).filter(e => e !== b && e.dataset.name !== '全部');
-        let idx = others.length;
-        for (let i = 0; i < others.length; i++) {
-          const r = others[i].getBoundingClientRect();
-          if (x < r.left + r.width / 2) { idx = i; break; }
-        }
-        flipTo(box, [box.children[0]].concat(others.slice(0, idx), [b], others.slice(idx)));
-      },
+       bindSortable(b, {
+      makeGeo: () => makeGeo(box, b, { isRow: true, fixedFirst: box.children[0] }),
       onDrop: () => {
         catOrder = Array.from(box.children).slice(1).map(c => c.dataset.name);
         saveCatOrder();
@@ -421,7 +413,7 @@ function renderBlocks() {
         d.addEventListener('click', () => { if (justDragged()) return; if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image); });
         bindSortable(d, {
           onHoldStill: () => enterSelectMode(item.id),
-          onDragMove: (x) => rowReorder(row, d, x),
+          makeGeo: () => makeGeo(row, d, { isRow: true }),
           onDrop: () => persistItemOrder(cat, row)
         });
         row.appendChild(d);
@@ -461,7 +453,7 @@ function renderGrid(cat) {
     div.addEventListener('click', () => { if (justDragged()) return; if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image); });
     bindSortable(div, {
       onHoldStill: () => enterSelectMode(item.id),
-      onDragMove: (x, y) => gridReorder(gridBox, div, x, y),
+      makeGeo: () => makeGeo(gridBox, div, { isRow: false }),
       onDrop: () => persistItemOrder(cat, gridBox)
     });
     gridBox.appendChild(div);
@@ -627,10 +619,14 @@ function sortItems(items, cat) {
   return sorted;
 }
 
-// 绑定长按拖拽。ctx: { onHoldStill, onDragMove(x,y), onDrop }
+// 绑定长按拖拽。ctx: { onHoldStill, makeGeo(dragged)→geo, onDrop }
+// 性能规范：位置只走 transform；rAF 驱动；几何预算；让位去重
 function bindSortable(el, ctx) {
   let startX = 0, startY = 0, timer = null, holding = false, moved = false;
   let floaty = null, offX = 0, offY = 0;
+  let origX = 0, origY = 0;                 // floaty 的定位基准（transform 相对它）
+  let lastX = 0, lastY = 0, rafId = null;
+  let geo = null, lastIdx = -1;
 
   function down(x, y) {
     if (dragState.active || selectMode) return;
@@ -641,15 +637,14 @@ function bindSortable(el, ctx) {
     if (!timer && !holding) return;
     const dist = Math.hypot(x - startX, y - startY);
     if (!holding) {
-      if (dist > 10) { clearTimeout(timer); timer = null; }   // 提前移动=滚动/滑动意图，弃权
+      if (dist > 10) { clearTimeout(timer); timer = null; }
       return;
     }
     if (!moved && dist > 10) { moved = true; startDrag(); }
     if (moved) {
-      if (ev && ev.cancelable) ev.preventDefault();           // 阻断原生滚动
-      floaty.style.left = (x - offX) + 'px';
-      floaty.style.top = (y - offY) + 'px';
-      ctx.onDragMove && ctx.onDragMove(x, y);
+      if (ev && ev.cancelable) ev.preventDefault();
+      lastX = x; lastY = y;
+      if (!rafId) rafId = requestAnimationFrame(updateFloat);   // rAF驱动：同帧多次move只更新一次
     }
   }
   function up() {
@@ -667,34 +662,54 @@ function bindSortable(el, ctx) {
   function startDrag() {
     dragState.active = true;
     suppressClickUntil = Date.now() + 400;
-    if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }   // iOS静默
-    el.style.transform = 'scale(1)';   // 抵消全局按压缩放，量出真实尺寸（否则克隆体偏窄→文字竖排）
+    if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+    el.style.transform = 'scale(1)';          // 抵消全局按压缩放，量真实尺寸
     const r = el.getBoundingClientRect();
     offX = startX - r.left; offY = startY - r.top;
+    origX = r.left; origY = r.top;
+    geo = ctx.makeGeo ? ctx.makeGeo(el) : null;   // 一次性缓存几何
+    lastIdx = geo ? geo.indexFromPoint(startX, startY) : -1;
+
     floaty = el.cloneNode(true);
     floaty.className = el.className.replace('drag-src', '') + ' drag-float';
-    floaty.style.left = r.left + 'px';
+    floaty.style.left = r.left + 'px';        // 只在此刻写一次
     floaty.style.top = r.top + 'px';
     floaty.style.width = r.width + 'px';
     floaty.style.height = r.height + 'px';
+    floaty.style.willChange = 'transform';    // 提前声明，合成层待命
     document.body.appendChild(floaty);
-    el.classList.add('drag-src');   // 原位置隐形占位，布局不塌
+    el.classList.add('drag-src');
+  }
+
+  function updateFloat() {
+    rafId = null;
+    // 只走 translate3d（顺带 translateZ(0) 提合成层），绝不碰 left/top
+    const px = lastX - offX, py = lastY - offY;
+    floaty.style.transform = `translate3d(${px - origX}px, ${py - origY}px, 0) scale(1.08)`;
+    if (geo) {
+      const idx = geo.indexFromPoint(lastX, lastY);   // 纯数学推算，零布局读取
+      if (idx !== lastIdx) {                          // 去重：只有目标格变化才让位
+        lastIdx = idx;
+        geo.apply(idx);
+      }
+    }
   }
 
   function finishDrag() {
-    const slot = el.getBoundingClientRect();   // el已被FLIP移到目标位，占位即空位
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    const slot = el.getBoundingClientRect();      // 收尾允许读一次终态
     floaty.classList.add('dropping');
-    floaty.style.left = slot.left + 'px';
-    floaty.style.top = slot.top + 'px';
+    floaty.style.willChange = '';                 // 释放合成层
+    floaty.style.transform = `translate3d(${slot.left - origX}px, ${slot.top - origY}px, 0) scale(1)`;
     setTimeout(() => {
       floaty.remove(); floaty = null;
       el.classList.remove('drag-src');
-      el.style.transform = '';   // 归还内联样式
+      el.style.transform = '';
       dragState.active = false;
-      suppressClickUntil = Date.now() + 300;   // 吃掉松手后的误点击
+      suppressClickUntil = Date.now() + 300;
       if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
       ctx.onDrop && ctx.onDrop();
-    }, 100);   // 100ms轻缓动落位，无大回弹
+    }, 100);
   }
 
   // 触屏
@@ -707,7 +722,40 @@ function bindSortable(el, ctx) {
   window.addEventListener('mousemove', e => { if (timer || holding) move(e.clientX, e.clientY, null); });
   window.addEventListener('mouseup', () => { if (timer || holding) up(); });
 }
+// 几何缓存工厂：拖动开始时一次性读布局，之后每帧纯数学推算
+// opt: { isRow: 仅左右换位, fixedFirst: 钉死首位的元素（如"全部"chip） }
+function makeGeo(container, dragged, opt) {
+  const isRow = opt && opt.isRow;
+  const fixedFirst = opt && opt.fixedFirst;
+  let units = snapshot();
 
+  function snapshot() {
+    return Array.from(container.children)
+      .filter(e => e !== dragged && e !== fixedFirst)
+      .map(e => {
+        const r = e.getBoundingClientRect();
+        return { el: e, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+      });
+  }
+
+  return {
+    indexFromPoint(x, y) {
+      for (let i = 0; i < units.length; i++) {
+        const u = units[i];
+        if (isRow) { if (x < u.cx) return i; }
+        else if (u.cy > y + 4 || (Math.abs(u.cy - y) <= 4 && u.cx > x)) return i;
+      }
+      return units.length;
+    },
+    apply(idx) {
+      const els = units.map(u => u.el);
+      els.splice(idx, 0, dragged);
+      if (fixedFirst) els.unshift(fixedFirst);
+      flipTo(container, els);
+      units = snapshot();   // 让位后重建缓存（仅目标格变化时发生，不是每帧）
+    }
+  };
+}
 // FLIP：兄弟元素滑开让位（≤200ms缓动，布局零跳动）
 function flipTo(container, orderedEls) {
   const first = new Map();
