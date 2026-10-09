@@ -329,14 +329,17 @@ function renderBlocks() {
     } else {
       const row = document.createElement('div');
       row.className = 'hrow';
-      items.forEach(item => {
+           items.forEach(item => {
         const d = document.createElement('div');
-        d.className = 'hthumb';
+        d.className = 'hthumb' + (selectedIds.has(item.id) ? ' selected' : '');
         const img = document.createElement('img');
         img.src = URL.createObjectURL(item.image);
         d.appendChild(img);
-        d.addEventListener('click', () => openDetail(item.id, item.image));
-        bindLongPress(d, () => deleteCloth(item.id));
+        const badge = document.createElement('span');
+        badge.className = 'check-badge';
+        d.appendChild(badge);
+        d.addEventListener('click', () => { if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image); });
+        bindLongPress(d, () => { if (!selectMode) enterSelectMode(item.id); });
         row.appendChild(d);
       });
       sec.appendChild(row);
@@ -361,14 +364,17 @@ function renderGrid(cat) {
     emptyTip.classList.remove('hidden');
     return;
   }
-  items.forEach(item => {
+    items.forEach(item => {
     const div = document.createElement('div');
-    div.className = 'thumb';
+    div.className = 'thumb' + (selectedIds.has(item.id) ? ' selected' : '');
     const img = document.createElement('img');
     img.src = URL.createObjectURL(item.image);
     div.appendChild(img);
-    div.addEventListener('click', () => openDetail(item.id, item.image));
-    bindLongPress(div, () => deleteCloth(item.id));
+    const badge = document.createElement('span');
+    badge.className = 'check-badge';
+    div.appendChild(badge);
+    div.addEventListener('click', () => { if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image); });
+    bindLongPress(div, () => { if (!selectMode) enterSelectMode(item.id); });
     gridBox.appendChild(div);
   });
 }
@@ -493,6 +499,124 @@ function saveAndNext() {
   });
 }
 
+// ---------- 长按多选管理模式（独立叠加状态，不污染普通模式） ----------
+let selectMode = false;
+let selectedIds = new Set();
+let selectPushed = false;
+
+function enterSelectMode(id) {
+  if (selectMode) return;
+  selectMode = true;
+  selectedIds = new Set([id]);
+  if (navigator.vibrate) { try { navigator.vibrate(40); } catch (e) {} }  // iOS静默降级
+  history.pushState({ sm: 1 }, '');   // 安卓返回键可退出
+  selectPushed = true;
+  updateSelectUI();
+  renderApp();
+}
+
+function toggleSelect(id) {
+  if (selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  updateSelectUI();
+  renderApp();
+}
+
+function toggleSelectAll() {
+  const viewItems = currentChip === '全部' ? allItems : allItems.filter(i => i.category === currentChip);
+  const allSel = viewItems.length > 0 && viewItems.every(i => selectedIds.has(i.id));
+  selectedIds.clear();
+  if (!allSel) viewItems.forEach(i => selectedIds.add(i.id));
+  updateSelectUI();
+  renderApp();
+}
+
+function exitSelectMode() {
+  if (!selectMode) return;
+  selectMode = false;
+  selectedIds.clear();
+  updateSelectUI();
+  renderApp();
+  if (selectPushed) { selectPushed = false; history.back(); }
+}
+
+// 安卓返回键退出（iOS无返回键，用顶栏"取消"）
+window.addEventListener('popstate', () => {
+  if (selectMode) {
+    selectMode = false;
+    selectedIds.clear();
+    selectPushed = false;
+    updateSelectUI();
+    renderApp();
+  }
+});
+
+function updateSelectUI() {
+  document.getElementById('normalHeader').classList.toggle('hidden', selectMode);
+  document.getElementById('selectBar').classList.toggle('hidden', !selectMode);
+  document.getElementById('manageBar').classList.toggle('hidden', !selectMode);
+  document.getElementById('fab').classList.toggle('hidden', selectMode);
+  document.getElementById('selectCount').textContent = '已选择' + selectedIds.size + '项';
+  document.getElementById('batchDeleteBtn').disabled = selectedIds.size === 0;
+}
+
+// 移到抽屉（是移动不是复制）
+function openMoveSheet() {
+  if (selectedIds.size === 0) return;
+  const box = document.getElementById('moveChips');
+  box.innerHTML = '';
+  CATEGORIES.forEach(c => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = c;
+    chip.onclick = () => moveSelectedTo(c);
+    box.appendChild(chip);
+  });
+  document.getElementById('moveSheet').classList.remove('hidden');
+}
+function closeMoveSheet() { document.getElementById('moveSheet').classList.add('hidden'); }
+
+function moveSelectedTo(cat) {
+  closeMoveSheet();
+  const ids = [...selectedIds];
+  showToast('处理中…');
+  let done = 0;
+  ids.forEach(id => {
+    const tx = db.transaction('clothes', 'readwrite');
+    const store = tx.objectStore('clothes');
+    const req = store.get(id);
+    req.onsuccess = () => {
+      const item = req.result;
+      if (item && item.category !== cat) { item.category = cat; store.put(item); }
+    };
+    tx.oncomplete = () => {
+      done++;
+      if (done === ids.length) { showToast('已移动'); exitSelectMode(); }
+    };
+  });
+}
+
+// 批量删除（带确认弹窗）
+function askBatchDelete() {
+  if (selectedIds.size === 0) return;
+  document.getElementById('confirmText').textContent = '删除这' + selectedIds.size + '件衣服？删了就找不回来了';
+  document.getElementById('confirmMask').classList.remove('hidden');
+}
+function closeConfirm() { document.getElementById('confirmMask').classList.add('hidden'); }
+function doBatchDelete() {
+  closeConfirm();
+  const ids = [...selectedIds];
+  showToast('处理中…');
+  let done = 0;
+  ids.forEach(id => {
+    const tx = db.transaction('clothes', 'readwrite');
+    tx.objectStore('clothes').delete(id);
+    tx.oncomplete = () => {
+      done++;
+      if (done === ids.length) { showToast('已删除'); exitSelectMode(); }
+    };
+  });
+}
 // ---------- 删除 ----------
 function deleteCloth(id) {
   if (!confirm('确定删除这件衣服吗？')) return;
