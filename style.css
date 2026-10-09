@@ -224,3 +224,5 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
 .drag-float.dropping { transition: left .1s ease, top .1s ease, transform .1s ease; transform: scale(1); }
 .drag-src { visibility: hidden; }     /* 原位置隐形占位 */
 .tab.all-chip { font-weight: 700; }   /* "全部"视觉突出 */
+
+.drag-float { white-space: nowrap; }   /* 克隆体里文字绝不换行 */
