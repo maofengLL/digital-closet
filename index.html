@@ -69,6 +69,7 @@
     <img id="detailImg" alt="衣服大图">
     <div class="preview-bar">
       <button class="danger" onclick="deleteCurrent()">删除这件</button>
+      <button onclick="openCareMode()">问卷(测试)</button>
       <button class="primary" onclick="closeDetail()">关闭</button>
     </div>
   </div>
@@ -117,6 +118,27 @@
       <div class="confirm-btns">
         <button class="confirm-cancel" onclick="closeConfirm()">再想想</button>
         <button class="confirm-ok" onclick="doBatchDelete()">删除</button>
+      </div>
+    </div>
+  </div>
+    <!-- 洗护问卷：形态选择（测试入口，步骤3接入录入流程后移除） -->
+  <div id="careModeMask" class="tip-mask hidden">
+    <div class="tip-card">
+      <h3 class="tip-title">洗护问卷 · 测试</h3>
+      <button class="sheet-btn" onclick="startCare('full')">全量形态（标签在手）</button>
+      <button class="sheet-btn" onclick="startCare('lite')">精简形态（标签不在手）</button>
+      <button class="sheet-btn cancel" onclick="closeCareMode()">取消</button>
+    </div>
+  </div>
+
+  <!-- 洗护问卷本体（双形态共用） -->
+  <div id="careMask" class="tip-mask hidden">
+    <div class="care-card">
+      <h3 class="tip-title">洗护问卷</h3>
+      <div id="careBody"></div>
+      <div class="care-actions">
+        <button id="careSkipBtn" class="care-skip hidden" onclick="careSkip()">没有洗水唛，先跳过</button>
+        <button class="care-ok" onclick="careConfirm()">确认</button>
       </div>
     </div>
   </div>
