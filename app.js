@@ -11,7 +11,7 @@ dbReq.onupgradeneeded = e => {
   }
 };
 // 数据库开门成功，才启动界面（IndexedDB 是异步的，页面加载等不了它）
-dbReq.onsuccess = e => { db = e.target.result; startApp(); };
+dbReq.onsuccess = e => { db = e.target.result; migrateThenStart(); };
 dbReq.onerror = () => alert('数据库打开失败，请换 Chrome 浏览器');
 
 const CATEGORIES = ['上装', '裤装', '裙装', '外套', '鞋', '配饰', '其他'];
@@ -83,6 +83,53 @@ function showToast(text) {
   t.classList.remove('hidden');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.add('hidden'), 1500);
+}
+// ---------- 数据层 v3：衣物档案（阶段②） ----------
+const SCHEMA_VERSION = 3;                 // 数据结构版本号
+const SCHEMA_KEY = 'closetSchemaVersion'; // localStorage 里记录版本，避免每次启动重跑
+
+// 新记录的档案默认值（所有空串 = 未知/未填，不用 null）
+function newArchive() {
+  return {
+    care: { materials: [], wash: '', bleach: '', dry: '', iron: '', waterTemp: '' },
+    careVerified: false,                 // 只有用户亲手核对过问卷才置 true
+    meta: { purchaseDate: '', status: '在穿' },
+    notes: [],
+    photos: { standard: '' }             // 占位：blob 存储无路径，步骤6产出标准图后填入
+  };
+}
+
+// 给单条记录补档案字段（幂等：只补缺失，绝不覆盖已有值）
+function migrateItem(item) {
+  if (!item.care) item.care = { materials: [], wash: '', bleach: '', dry: '', iron: '', waterTemp: '' };
+  else {
+    if (!Array.isArray(item.care.materials)) item.care.materials = [];
+    ['wash', 'bleach', 'dry', 'iron', 'waterTemp'].forEach(k => {
+      if (item.care[k] === undefined || item.care[k] === null) item.care[k] = '';
+    });
+  }
+  if (item.careVerified === undefined || item.careVerified === null) item.careVerified = false;
+  if (!item.meta) item.meta = { purchaseDate: '', status: '在穿' };
+  else {
+    if (item.meta.purchaseDate === undefined || item.meta.purchaseDate === null) item.meta.purchaseDate = '';
+    if (!item.meta.status) item.meta.status = '在穿';
+  }
+  if (!Array.isArray(item.notes)) item.notes = [];
+  if (!item.photos) item.photos = { standard: '' };
+  return item;
+}
+
+// 启动时：版本检查 + 一次性迁移（幂等，重复执行无副作用）
+function migrateThenStart() {
+  if (parseInt(localStorage.getItem(SCHEMA_KEY) || '0', 10) >= SCHEMA_VERSION) { startApp(); return; }
+  const tx = db.transaction('clothes', 'readwrite');
+  const store = tx.objectStore('clothes');
+  store.openCursor().onsuccess = e => {
+    const cur = e.target.result;
+    if (cur) { store.put(migrateItem(cur.value)); cur.continue(); }
+    else localStorage.setItem(SCHEMA_KEY, String(SCHEMA_VERSION));
+  };
+  tx.oncomplete = () => startApp();   // 迁移完才启动界面
 }
 // ---------- 全量加载 ----------
 function loadAll(cb) {
@@ -468,10 +515,11 @@ function saveCurrent(done) {
   btn.disabled = true;
   try {
     const tx = db.transaction('clothes', 'readwrite');
-    tx.objectStore('clothes').add({
+      tx.objectStore('clothes').add({
       image: currentPhoto,
       category: addCategory,
-      time: Date.now()
+      time: Date.now(),
+      ...newArchive()   // 新记录默认带全部档案字段
     });
     tx.oncomplete = () => {
       currentPhoto = null;
