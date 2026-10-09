@@ -217,11 +217,11 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
 /* ===== 拖拽排序 ===== */
 .drag-float {
   position: fixed; z-index: 70; pointer-events: none;
-  transform: scale(1.08);              /* 抓起态：放大+浮起阴影 */
-  box-shadow: 0 10px 28px rgba(0,0,0,.35);
+  box-shadow: 0 6px 12px rgba(0,0,0,.25);   /* 降载阴影：blur≤12、透明度0.25 */
   border-radius: 10px;
+  /* 缩放改由 JS 写在 transform 里（与 translate3d 合并），此处不声明 */
 }
-.drag-float.dropping { transition: left .1s ease, top .1s ease, transform .1s ease; transform: scale(1); }
+.drag-float.dropping { transition: transform .1s ease; }
 .drag-src { visibility: hidden; }     /* 原位置隐形占位 */
 .tab.all-chip { font-weight: 700; }   /* "全部"视觉突出 */
 
