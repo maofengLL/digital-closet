@@ -1184,7 +1184,7 @@ function openDetail(id, image, ev) {
   };
   img.src = URL.createObjectURL(image);
   // 拍立得随机±2度倾斜
-  document.getElementById('paperPhoto').style.setProperty('--tilt', (Math.random() * 4 - 2).toFixed(1) + 'deg');
+  document.getElementById('paperPhoto').style.setProperty('--tilt', ((2 + Math.random()) * (Math.random() < 0.5 ? -1 : 1)).toFixed(1) + 'deg');
 
   // 邮戳：仅已核对（careVerified=true），日期=careCompletedAt
   if (item.careVerified && item.careCompletedAt) {
@@ -1204,23 +1204,31 @@ function closeDetail() {
   document.getElementById('paperMask').classList.add('hidden');
 }
 
-// 便签堆：最新3张，各自微倾斜；无便签则整区不渲染
+// 便签三槽位：常显，有内容显示文字、无内容显示空白便签；最新3张上纸
 function renderPaperNotes(item) {
-  const box = document.getElementById('paperNotes');
-  box.innerHTML = '';
-  if (!Array.isArray(item.notes) || !item.notes.length) return;
-  const latest = item.notes.slice(-3).reverse();
-  latest.forEach((n, i) => {
-    const d = document.createElement('div');
-    d.className = 'pnote';
-    d.style.setProperty('--ntilt', ((i % 2 ? 1 : -1) * (1 + i)) + 'deg');
-    d.textContent = n.text;
-    box.appendChild(d);
+  const notes = (Array.isArray(item.notes) && item.notes.length) ? item.notes.slice(-3).reverse() : [];
+  const slots = [
+    { el: document.getElementById('noteA'), n: notes[0] },
+    { el: document.getElementById('noteB'), n: notes[1] },
+    { el: document.getElementById('noteC'), n: notes[2] }
+  ];
+  slots.forEach(s => {
+    s.el.textContent = s.n ? s.n.text : '';
+    s.el.classList.toggle('empty', !s.n);
   });
 }
 
-// 洗护档案区：空字段一律不显示；全空显示灰字；购入时间殿后（小一号灰色，填了才显示）
+// 洗护档案区：空字段不显示；行右侧配国标洗水唛图标（材质/购入不配）；全空显示灰字
 const CARE_LABELS = { materials: '材质', wash: '洗涤方式', waterTemp: '水温', bleach: '漂白', dry: '干燥', iron: '熨烫' };
+
+// 国标洗水唛符号（28×28由CSS定，灰蓝40%透明；水盆/三角/方/熨斗/桶内数字）
+const CARE_ICONS = {
+  wash: '<svg viewBox="0 0 24 24"><path d="M3 9h18v4a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V9z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6.5 13c1 1 2.2 1 3.2 0s2.2-1 3.3 0 2.2 1 3.2 0" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>',
+  waterTemp: '<svg viewBox="0 0 24 24"><path d="M4 8h16v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z" fill="none" stroke="currentColor" stroke-width="1.8"/><text x="12" y="14.5" font-size="7" text-anchor="middle" fill="currentColor">40</text></svg>',
+  bleach: '<svg viewBox="0 0 24 24"><path d="M12 4 L20 19 H4 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  dry: '<svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+  iron: '<svg viewBox="0 0 24 24"><path d="M3 16c0-3 3-5 9-5s9 2 9 5v1H3v-1z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15 11V8a2 2 0 0 1 4 0" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>'
+};
 
 function renderPaperCare(item) {
   const box = document.getElementById('paperCare');
@@ -1229,11 +1237,20 @@ function renderPaperCare(item) {
   ['materials', 'wash', 'waterTemp', 'bleach', 'dry', 'iron'].forEach(k => {
     let v = item.care ? item.care[k] : '';
     if (k === 'materials') v = (Array.isArray(v) && v.length) ? v.join('、') : '';
-    if (!v) return;                       // 空字段不显示
+    if (!v) return;
     any = true;
     const row = document.createElement('div');
     row.className = 'care-row';
-    row.innerHTML = '<p class="care-label">' + CARE_LABELS[k] + '</p><p class="care-value">' + v + '</p>';
+    const txt = document.createElement('div');
+    txt.className = 'care-row-text';
+    txt.innerHTML = '<p class="care-label">' + CARE_LABELS[k] + '</p><p class="care-value">' + v + '</p>';
+    row.appendChild(txt);
+    if (CARE_ICONS[k]) {
+      const ic = document.createElement('span');
+      ic.className = 'care-icon';
+      ic.innerHTML = CARE_ICONS[k];
+      row.appendChild(ic);
+    }
     box.appendChild(row);
   });
   if (item.meta && item.meta.purchaseDate) {
