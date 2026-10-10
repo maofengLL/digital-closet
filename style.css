@@ -1,3 +1,9 @@
+/* ============================================================
+   数字衣柜 · style.css（全量重写版）
+   一张纸只有一个版本：纸张=v4画布；本文件无历史覆盖残留
+   ============================================================ */
+
+/* ---------- 基础 ---------- */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: sans-serif; background: #FAFAF7; color: #2B2B2B; }
 header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; font-size: 18px; font-weight: 600; background: #fff; border-bottom: 1px solid #E5E2DA; }
@@ -7,135 +13,25 @@ main { padding: 16px 16px 24px; }
 button { font-family: inherit; -webkit-appearance: none; appearance: none; }
 .hidden { display: none !important; }
 
-/* 筛选 chips */
-.tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 10px; }
-.tab { flex: 0 0 auto; padding: 8px 16px; font-size: 14px; color: #2B2B2B; background: #fff; border: 1px solid #E5E2DA; border-radius: 999px; }
-.tab.active { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
-
-/* 筛选提示行 */
-.filter-hint { font-size: 12px; color: #8A867D; margin-bottom: 10px; }
-
-/* 抽屉区块 */
-.section { margin-bottom: 18px; }
-.section-head {
-  display: flex; justify-content: space-between; align-items: baseline;
-  padding-bottom: 6px; margin-bottom: 8px;
-  border-bottom: 1px solid #E5E2DA;
-}
-.section-head.tap:active { opacity: .5; }   /* 按下的反馈，提示可点 */
-.section-head .name { font-size: 15px; font-weight: 600; }
-.section-head .count { font-size: 13px; color: #8A867D; }
-.block-empty { font-size: 13px; color: #8A867D; padding: 4px 0; }
-
-/* 抽屉体：横向一行，超出横滑 */
-.hrow { display: flex; gap: 8px; overflow-x: auto; }
-.hthumb { flex: 0 0 auto; width: 96px; height: 96px; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid #E5E2DA; }
-.hthumb img { width: 100%; height: 100%; object-fit: cover; }
-
-/* 单品类网格 */
-.wardrobe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.thumb { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid #E5E2DA; }
-.thumb img { width: 100%; height: 100%; object-fit: cover; }
-
-/* 页脚提示 */
-.footer-hint { text-align: center; font-size: 12px; color: #B8B4AA; margin-top: 24px; }
-
-/* FAB */
-.fab {
-  position: fixed; right: 16px; bottom: 24px;
-  width: 56px; height: 56px; border-radius: 50%;
-  background: #2B2B2B; color: #fff; font-size: 28px; border: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,.25); z-index: 5;
-}
-
-/* 底部动作面板 */
-.sheet-mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 20; }
-.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 16px 16px 0 0; padding: 16px 16px 24px; }
-.sheet-btn { display: block; width: 100%; padding: 16px 0; margin-top: 8px; font-size: 16px; color: #2B2B2B; background: #F3F1EA; border: none; border-radius: 12px; }
-.sheet-btn.cancel { color: #8A867D; }
-.sheet-cats { margin-bottom: 8px; }
-.sheet-cats .tip { margin-bottom: 8px; }
-.chip { padding: 8px 14px; margin: 0 6px 6px 0; font-size: 14px; color: #2B2B2B; background: #fff; border: 1px solid #E5E2DA; border-radius: 999px; }
-.chip.active { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
-
-/* 预览层 / 大图层 */
-.preview { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; z-index: 10; }
-.preview img { flex: 1; min-height: 0; object-fit: contain; width: 100%; }
-.preview-back { position: absolute; top: 12px; left: 12px; z-index: 11; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,.5); color: #fff; font-size: 20px; border: none; }
-.preview-bar { flex-shrink: 0; display: flex; gap: 10px; padding: 16px; }
-.preview-bar button { flex: 1; padding: 14px 0; font-size: 15px; border: none; border-radius: 10px; background: #444; color: #fff; }
-.preview-bar .primary { background: #2B2B2B; }
-.preview-bar .danger { background: #B4432F; }
-
-/* ===== 按下感（全局）：所有按钮按下时缩小+变暗，纯CSS一次生效 ===== */
+/* 按下感（全局）：所有按钮按下时缩小+变暗 */
 button { transition: transform .08s ease, opacity .08s ease; }
 button:active { transform: scale(.96); opacity: .7; }
 
-/* ===== 轻提示 toast：屏幕中部一闪而过的小字 ===== */
-.toast {
-  position: fixed; left: 50%; top: 40%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,.75); color: #fff;
-  padding: 10px 20px; border-radius: 999px;
-  font-size: 14px; z-index: 30;
-   pointer-events: none;   /* 只显示，不挡触摸 */
-}
+/* ---------- 筛选条 ---------- */
+.filter-bar { position: relative; display: flex; justify-content: flex-start; align-items: center; margin-bottom: 12px; }
+.tabs { display: flex; gap: 8px; overflow-x: auto; }
+.tab { flex: 0 0 auto; padding: 8px 16px; font-size: 14px; color: #2B2B2B; background: #fff; border: 1px solid #E5E2DA; border-radius: 999px; }
+.tab.active { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
+.tab.all-chip { font-weight: 700; }
 
-/* ===== 顶栏"?"按钮（常驻） ===== */
-.help-btn {
-  width: 32px; height: 32px; border-radius: 50%;
-  background: #fff; border: 1.5px solid #2B2B2B;
-  color: #2B2B2B; font-size: 15px; font-weight: 700;
-}
-
-/* ===== 拍照贴士卡片 ===== */
-.tip-mask {
-  position: fixed; inset: 0; z-index: 40;
-  background: rgba(245, 238, 227, .45);   /* 淡暖色半透明罩 */
-  backdrop-filter: blur(6px);             /* 背景毛玻璃 */
-  display: flex; align-items: center; justify-content: center;
-  animation: fadeIn .2s ease;
-}
-.tip-card {
-  width: 78%; max-width: 320px;
-  background: #FFFDF8;
-  border: 1px solid #EDE7DA;
-  border-radius: 18px;
-  box-shadow: 0 8px 30px rgba(60,50,30,.18), 0 2px 8px rgba(60,50,30,.08);
-  padding: 24px 22px;
-  animation: popIn .2s ease;
-}
-.tip-title { font-size: 16px; font-weight: 600; text-align: center; margin-bottom: 14px; }
-.tip-line { font-size: 15px; color: #4A463F; line-height: 30px; }
-.tip-dismiss { display: flex; align-items: center; gap: 8px; margin: 12px 0 4px; }
-.tip-circle {
-  width: 18px; height: 18px; flex: 0 0 auto;
-  border: 1.5px solid #8A867D; border-radius: 50%;
-}
-.tip-circle.checked { background: #2B2B2B; border-color: #2B2B2B; box-shadow: inset 0 0 0 3px #FFFDF8; }
-.tip-dismiss-text { font-size: 12px; color: #8A867D; }
-.tip-ok {
-  display: block; width: 100%; margin-top: 16px; padding: 12px 0;
-  font-size: 16px; font-weight: 600; color: #fff;
-  background: #2B2B2B; border: none; border-radius: 12px;
-}
-
-/* 卡片动画：背景淡入 + 卡片缩放上浮 */
-@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-@keyframes popIn { from { opacity: 0; transform: scale(.94) translateY(8px) } to { opacity: 1; transform: none } }
-
-
-/* ===== 筛选条：药丸 + 下拉面板 ===== */
-.filter-bar { position: relative; display: flex; justify-content: flex-start; align-items: center; }
+/* 药丸 + 下拉面板 */
 .pill {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 8px 16px; font-size: 14px; color: #2B2B2B;
   background: #fff; border: 1px solid #E5E2DA; border-radius: 999px;
-  animation: fadeIn .15s ease;   /* 药丸淡入 */
+  animation: fadeIn .15s ease;
 }
 .pill-arrow { font-size: 11px; color: #8A867D; }
-
-/* 下拉面板 */
 .drop-mask { position: fixed; inset: 0; z-index: 25; animation: fadeIn .2s ease; transition: opacity .15s ease; }
 .drop-panel {
   position: absolute; top: calc(100% + 6px); left: 0; z-index: 26;
@@ -148,11 +44,30 @@ button:active { transform: scale(.96); opacity: .7; }
 .drop-chips { display: grid; grid-template-columns: repeat(4, auto); gap: 8px; }
 .drop-chips .chip { opacity: 0; transform: translateY(-6px); transition: opacity .18s ease, transform .18s ease; }
 .drop-chips .chip.dealt { opacity: 1; transform: none; }
+.drop-chips .chip.active { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
 
-/* ===== 长按多选管理模式 ===== */
-.thumb, .hthumb { position: relative; }   /* 徽标定位锚点 */
+/* S1 收牌幽灵 */
+.anim-mask { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
+.chip-ghost { position: fixed; z-index: 60; pointer-events: none; white-space: nowrap; transition: transform .18s ease-in, opacity .18s ease-in; }
 
-/* 管理顶栏 */
+/* ---------- 抽屉柜（全部态） ---------- */
+.section { margin-bottom: 18px; }
+.section-head { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; margin-bottom: 8px; border-bottom: 1px solid #E5E2DA; }
+.section-head.tap:active { opacity: .5; }
+.section-head .name { font-size: 15px; font-weight: 600; }
+.section-head .count { font-size: 13px; color: #8A867D; }
+.block-empty { font-size: 13px; color: #8A867D; padding: 4px 0; }
+.hrow { display: flex; gap: 8px; overflow-x: auto; }
+.hthumb { flex: 0 0 auto; width: 96px; height: 96px; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid #E5E2DA; position: relative; }
+.hthumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* 单品类网格 */
+.wardrobe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.thumb { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid #E5E2DA; position: relative; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------- 长按多选管理模式 ---------- */
+body.selecting main { padding-top: 72px; }
 .select-bar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 15;
   display: flex; align-items: center; justify-content: space-between;
@@ -161,8 +76,6 @@ button:active { transform: scale(.96); opacity: .7; }
 }
 .select-bar .sel-count { font-size: 15px; font-weight: 600; }
 .select-bar button { font-size: 15px; color: #2B2B2B; background: none; border: none; padding: 4px 8px; }
-
-/* 管理底栏：只许两个按钮 */
 .manage-bar {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 15;
   display: flex; gap: 10px; padding: 14px 16px 20px;
@@ -173,74 +86,84 @@ button:active { transform: scale(.96); opacity: .7; }
 .manage-bar button.danger-btn { background: #B4432F; color: #fff; }
 .manage-bar button:disabled { opacity: .4; }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: none; } }
-
-/* 选中态：描边 + 勾选徽标（轻微上浮） */
-.thumb.selected, .hthumb.selected {
-  outline: 2px solid #2B2B2B; outline-offset: -2px;
-  transform: translateY(-2px);
-}
+.thumb.selected, .hthumb.selected { outline: 2px solid #2B2B2B; outline-offset: -2px; transform: translateY(-2px); }
 .check-badge {
-  display: none;
-  position: absolute; top: 6px; right: 6px;
+  display: none; position: absolute; top: 6px; right: 6px;
   width: 22px; height: 22px; border-radius: 50%;
   background: rgba(255,255,255,.9); border: 1.5px solid #B8B4AA;
   align-items: center; justify-content: center;
 }
-.thumb.selected .check-badge, .hthumb.selected .check-badge {
-  display: flex; background: #2B2B2B; border-color: #2B2B2B;
-}
-.thumb.selected .check-badge::after, .hthumb.selected .check-badge::after {
-  content: '✓'; color: #fff; font-size: 13px;
-}
-
-/* 移到抽屉面板的 chips */
+.thumb.selected .check-badge, .hthumb.selected .check-badge { display: flex; background: #2B2B2B; border-color: #2B2B2B; }
+.thumb.selected .check-badge::after, .hthumb.selected .check-badge::after { content: '✓'; color: #fff; font-size: 13px; }
 .move-chips { display: grid; grid-template-columns: repeat(4, auto); gap: 8px; margin: 8px 0; }
-
-/* 删除确认弹窗按钮行 */
 .confirm-btns { display: flex; gap: 10px; margin-top: 18px; }
 .confirm-btns button { flex: 1; padding: 12px 0; font-size: 16px; border: none; border-radius: 12px; }
 .confirm-cancel { background: #F3F1EA; color: #2B2B2B; }
 .confirm-ok { background: #B4432F; color: #fff; font-weight: 600; }
-.drop-chips .chip.active { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
 
-/* 收牌用的幽灵克隆 */
-.chip-ghost { position: fixed; z-index: 60; pointer-events: none; transition: transform .18s ease-in, opacity .18s ease-in; }
-
-/* ===== 细节打磨：间距与多选让位 ===== */
-.filter-bar { margin-bottom: 12px; }           /* 网格与筛选条/药丸之间留距 */
-body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位 */
-
-/* ===== S1 动画隔离遮罩层：透明、不挡触摸 ===== */
-.anim-mask { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
-.chip-ghost { white-space: nowrap; }   /* 禁止文字换行，坐标以写死宽度为准 */
-
-/* ===== 拖拽排序 ===== */
-.drag-float {
-  position: fixed; z-index: 70; pointer-events: none;
-  box-shadow: 0 6px 12px rgba(0,0,0,.25);   /* 降载阴影：blur≤12、透明度0.25 */
-  border-radius: 10px;
-  /* 缩放改由 JS 写在 transform 里（与 translate3d 合并），此处不声明 */
-}
-.drag-float.dropping { transition: transform .1s ease; }
-.drag-src { visibility: hidden; }     /* 原位置隐形占位 */
-.tab.all-chip { font-weight: 700; }   /* "全部"视觉突出 */
-
-.drag-float { white-space: nowrap; }   /* 克隆体里文字绝不换行 */
-
-/* ===== 长按手势保护：禁浏览器默认菜单/选中/图片拖拽 ===== */
-#blocksBox, #gridBox, #chipRow, .hrow, .tabs {
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;   /* iOS长按不弹"存储图像"菜单 */
-}
-.thumb img, .hthumb img {
-  pointer-events: none;          /* 事件直接落到外层div，图片本身不可成为长按目标 */
-  -webkit-user-drag: none;
-  user-select: none;
-  -webkit-user-select: none;
+/* ---------- FAB ---------- */
+.fab {
+  position: fixed; right: 16px; bottom: 24px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #2B2B2B; color: #fff; font-size: 28px; border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25); z-index: 5;
 }
 
-/* ===== 洗护问卷 ===== */
+/* ---------- 底部动作面板 ---------- */
+.sheet-mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 20; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 16px 16px 0 0; padding: 16px 16px 24px; }
+.sheet-btn { display: block; width: 100%; padding: 16px 0; margin-top: 8px; font-size: 16px; color: #2B2B2B; background: #F3F1EA; border: none; border-radius: 12px; }
+.sheet-btn.cancel { color: #8A867D; }
+.sheet-cats { margin-bottom: 8px; }
+.sheet-cats .tip { margin-bottom: 8px; }
+.chip { padding: 8px 14px; margin: 0 6px 6px 0; font-size: 14px; color: #2B2B2B; background: #fff; border: 1px solid #E5E2DA; border-radius: 999px; }
+.chip.active { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
+
+/* ---------- 拍照预览层 ---------- */
+.preview { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; z-index: 10; }
+.preview img { flex: 1; min-height: 0; object-fit: contain; width: 100%; }
+.preview-back { position: absolute; top: 12px; left: 12px; z-index: 11; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,.5); color: #fff; font-size: 20px; border: none; }
+.preview-bar { flex-shrink: 0; display: flex; gap: 10px; padding: 16px; }
+.preview-bar button { flex: 1; padding: 14px 0; font-size: 15px; border: none; border-radius: 10px; background: #444; color: #fff; }
+.preview-bar .primary { background: #2B2B2B; }
+.preview-bar .danger { background: #B4432F; }
+
+/* ---------- toast 轻提示 ---------- */
+.toast {
+  position: fixed; left: 50%; top: 40%; transform: translateX(-50%);
+  background: rgba(0,0,0,.75); color: #fff;
+  padding: 10px 20px; border-radius: 999px;
+  font-size: 14px; z-index: 30; pointer-events: none;
+}
+
+/* ---------- 顶栏帮助按钮 ---------- */
+.help-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #fff; border: 1.5px solid #2B2B2B;
+  color: #2B2B2B; font-size: 15px; font-weight: 700;
+}
+
+/* ---------- 贴士卡片 / 通用弹窗 ---------- */
+.tip-mask {
+  position: fixed; inset: 0; z-index: 40;
+  background: rgba(245, 238, 227, .45);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn .2s ease;
+}
+.tip-card {
+  width: 78%; max-width: 320px;
+  background: #FFFDF8; border: 1px solid #EDE7DA; border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(60,50,30,.18), 0 2px 8px rgba(60,50,30,.08);
+  padding: 24px 22px;
+  animation: popIn .2s ease;
+}
+.tip-title { font-size: 16px; font-weight: 600; text-align: center; margin-bottom: 14px; }
+.tip-line { font-size: 15px; color: #4A463F; line-height: 30px; }
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes popIn { from { opacity: 0; transform: scale(.94) translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ---------- 洗护问卷 ---------- */
 .care-card {
   width: 88%; max-width: 360px; max-height: 78vh; overflow-y: auto;
   background: #FFFDF8; border: 1px solid #EDE7DA; border-radius: 18px;
@@ -251,19 +174,44 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
 .care-q { margin-bottom: 14px; }
 .care-q-title { font-size: 14px; font-weight: 600; color: #2B2B2B; margin-bottom: 6px; }
 .care-opts { display: flex; flex-wrap: wrap; gap: 8px; }
-.care-opt {
-  padding: 8px 14px; font-size: 14px; color: #2B2B2B;
-  background: #fff; border: 1px solid #E5E2DA; border-radius: 999px;
-}
+.care-opt { padding: 8px 14px; font-size: 14px; color: #2B2B2B; background: #fff; border: 1px solid #E5E2DA; border-radius: 999px; }
 .care-opt.sel { background: #2B2B2B; color: #fff; border-color: #2B2B2B; }
 .care-actions { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-.care-ok {
-  flex: 1; padding: 12px 0; font-size: 15px; font-weight: 600; color: #fff;
-  background: #2B2B2B; border: none; border-radius: 12px;
-}
+.care-ok { flex: 1; padding: 12px 0; font-size: 15px; font-weight: 600; color: #fff; background: #2B2B2B; border: none; border-radius: 12px; }
 .care-skip { flex: 0 0 auto; background: none; border: none; color: #8A867D; font-size: 13px; padding: 12px 4px; }
+.care-to-full { font-size: 12px; color: #8A867D; text-align: center; margin: -6px 0 12px; text-decoration: underline; text-underline-offset: 3px; }
 
-/* ===== 录入盖章动画 ===== */
+/* ---------- 卡片常驻邮戳（网格小徽章） ---------- */
+.card-stamp {
+  position: absolute; right: 4px; bottom: 4px;
+  width: 20%; max-width: 34px; aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px double rgba(43,58,85,.85);
+  background: rgba(43,58,85,.10);
+  color: #2B3A55;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+  transform: rotate(-3deg);
+  pointer-events: none;
+}
+.card-stamp.stamping { animation: stampHit .25s ease-out; }
+@keyframes stampHit {
+  0%   { transform: rotate(-3deg) scale(1.7); opacity: .2; }
+  70%  { transform: rotate(-3deg) scale(.94); opacity: 1; }
+  100% { transform: rotate(-3deg) scale(1);   opacity: 1; }
+}
+
+/* ---------- 拖拽排序 ---------- */
+.drag-float {
+  position: fixed; z-index: 70; pointer-events: none;
+  box-shadow: 0 6px 12px rgba(0,0,0,.25);
+  border-radius: 10px;
+}
+.drag-float.dropping { transition: transform .1s ease; }
+.drag-float { white-space: nowrap; }
+.drag-src { visibility: hidden; }
+
+/* ---------- 录入盖章（旧中央邮戳，已被卡片邮戳取代，保留样式无害） ---------- */
 .stamp { position: fixed; left: 50%; top: 22%; transform: translateX(-50%); z-index: 80; pointer-events: none; }
 .stamp-inner {
   width: 110px; height: 110px; border-radius: 50%;
@@ -286,82 +234,60 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
   animation: stampIn .25s ease-out; pointer-events: none;
 }
 
-/* 问卷"切全量"小字入口 */
-.care-to-full { font-size: 12px; color: #8A867D; text-align: center; margin: -6px 0 12px; }
-
-.care-to-full { text-decoration: underline; text-underline-offset: 3px; }   /* 下划线=可点信号 */
-
-/* ===== 卡片常驻邮戳（careVerified=true 的徽章） ===== */
-.card-stamp {
-  position: absolute; right: 4px; bottom: 4px;
-  width: 20%; max-width: 34px; aspect-ratio: 1;
-  border-radius: 50%;
-  border: 2px double rgba(43,58,85,.85);
-  background: rgba(43,58,85,.10);          /* 半透明印泥感 */
-  color: #2B3A55;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 9px; font-weight: 700;
-  transform: rotate(-3deg);
-  pointer-events: none;                     /* 不挡触摸、不挡主体 */
+/* ---------- 长按手势保护 ---------- */
+#blocksBox, #gridBox, #chipRow, .hrow, .tabs {
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
 }
-.card-stamp.stamping { animation: stampHit .25s ease-out; }
-@keyframes stampHit {
-  0%   { transform: rotate(-3deg) scale(1.7); opacity: .2; }
-  70%  { transform: rotate(-3deg) scale(.94); opacity: 1; }
-  100% { transform: rotate(-3deg) scale(1);   opacity: 1; }
+.thumb img, .hthumb img {
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none; -webkit-user-select: none;
 }
 
-/* ===== 纸张详情页 ===== */
-.paper-mask { position: fixed; inset: 0; z-index: 10; background: rgba(0,0,0,.45); animation: fadeIn .2s ease; }
+/* ============================================================
+   纸张详情页（唯一版本 v4：720×1280 画布，transform 等比缩放）
+   scale = min(屏宽×0.9, 屏高×0.9按9:16反算) / 720，由 fitPaper() 写入 --ps
+   ============================================================ */
+.paper-mask { display: flex; align-items: center; justify-content: center; }
 .paper {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  width: 92%; max-width: 560px; max-height: 88vh; overflow-y: auto;
-  background: #FFFDF6; border-radius: 16px;
+  position: static;
+  width: 720px; height: 1280px;
+  transform: scale(var(--ps, 0.5));
+  transform-origin: 360px 640px;                 /* 默认中心；入场时JS改到缩略图 */
+  overflow: hidden;                               /* 禁滚动 */
+  display: flex; gap: 29px;
+  padding: 32px;
+  background: #FFFDF6; border-radius: 24px;
   box-shadow: 0 16px 48px rgba(60,50,30,.25);
-  padding: 18px; display: flex; gap: 14px;
   animation: paperIn .2s ease;
 }
 @keyframes paperIn {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(.3); }
-  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  from { transform: scale(calc(var(--ps, .5) * 0.5)); opacity: 0; }
+  to   { transform: scale(var(--ps, .5)); opacity: 1; }
 }
-.paper-x {
-  position: absolute; top: 8px; right: 12px; z-index: 2;
-  background: none; border: none; color: #B8B4AA; font-size: 22px; padding: 4px;
-}
+.paper-x { position: absolute; top: 16px; right: 20px; z-index: 3; background: none; border: none; color: #B8B4AA; font-size: 28px; padding: 4px; }
 
-/* 左列 */
-.paper-left { flex: 0 0 58%; }
-/* 画框：定高（≈纸高52%），便签区锚定在其下方，与横竖图无关 */
-.paper-photo-wrap {
-  height: 46vh;
-  display: flex; align-items: center; justify-content: center;
-}
-/* 白边卡：紧贴照片实际大小，横图扁宽、竖图瘦高，水平居中 */
+/* 左栏378：照片容器576定高 + 便签三槽 */
+.paper-left { flex: 0 0 378px; display: flex; flex-direction: column; min-width: 0; }
+.paper-photo-wrap { height: 576px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .paper-photo {
   position: relative;
-  background: #fff; padding: 10px 10px 32px;   /* 底边厚=拍立得 */
-  transform: rotate(var(--tilt, 0deg));         /* 随机±2度 */
+  background: #fff; padding: 16px 16px 48px;
+  transform: rotate(var(--tilt, 0deg));
   box-shadow: 0 6px 18px rgba(60,50,30,.18);
   max-width: 100%; max-height: 100%;
 }
-.paper-photo img {
-  display: block; border-radius: 2px;
-  max-width: 100%; max-height: calc(46vh - 44px);   /* contain 不裁切 */
-  width: auto; height: auto;
-}
-
-/* 和纸胶带：四角各一条，半透明微旋转 */
-.tape { position: absolute; width: 54px; height: 20px; background: rgba(240,235,220,.75); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.paper-photo img { display: block; max-width: 346px; max-height: 500px; width: auto; height: auto; border-radius: 2px; }
+.tape { position: absolute; width: 46px; height: 20px; background: rgba(240,235,220,.75); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 .tape-tl { top: -8px; left: -14px; transform: rotate(-40deg); }
 .tape-tr { top: -8px; right: -14px; transform: rotate(40deg); }
 .tape-bl { bottom: 22px; left: -16px; transform: rotate(35deg); }
 .tape-br { bottom: 22px; right: -16px; transform: rotate(-35deg); }
 
-/* 纸上邮戳：压照片右下角，戳心在照片边界外 */
+/* 纸上邮戳：JS按"照片短边×0.3（56~96px）"写宽高 */
 .paper-stamp {
   position: absolute; right: -10px; bottom: 26px;
-  aspect-ratio: 1;                 /* 直径=照片短边×0.3，限56~96px（JS写入） */
+  aspect-ratio: 1;
   border-radius: 50%;
   border: 3px double rgba(43,58,85,.8);
   background: rgba(43,58,85,.08);
@@ -371,116 +297,29 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
   pointer-events: none;
 }
 
-/* 便签堆：黄便利贴+手写体+微倾斜，最多3张 */
-.paper-notes { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; }
-.pnote {
-  background: #FFF6A8; padding: 10px 12px; max-width: 140px;
-  font-family: "Kaiti SC", "STKaiti", "KaiTi", "楷体", cursive;
-  font-size: 14px; line-height: 1.5; color: #4A463F;
-  box-shadow: 0 3px 8px rgba(60,50,30,.15);
-  transform: rotate(var(--ntilt, 0deg));
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;   /* 超长省略，最多3行 */
-}
-
-/* 右列：通栏档案（印刷体） */
-.paper-right { flex: 1; min-width: 0; padding-bottom: max(8%, 40px); }   /* 底部留白≥纸高8% */
-.care-row { margin-bottom: 8px; }
-.care-label { font-size: 11px; color: #8A867D; margin-bottom: 2px; }
-.care-value { font-size: 14px; color: #2B2B2B; }
-.purchase { font-size: 12px; color: #8A867D; margin-top: 12px; }
-.care-empty { font-size: 13px; color: #B8B4AA; }
-
-/* ===== 纸张详情页 v3（按图纸720×1280比例，覆盖旧版） ===== */
-.paper {
-  width: min(92vw, 480px);
-  aspect-ratio: 720 / 1280;         /* 竖版9:16 */
-  max-height: 90vh;
-  display: flex; gap: 4%;
-  padding: 4.5%;
-}
-
-/* 左栏：照片（45%定高）+ 便签三槽 */
-.paper-left { flex: 0 0 56%; display: flex; flex-direction: column; min-width: 0; }
-.paper-photo-wrap { height: 45%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.paper-photo { padding: 10px 10px 32px; max-width: 100%; max-height: 100%; }
-.paper-photo img {
-  display: block; border-radius: 2px; width: auto; height: auto; max-width: 100%;
-  max-height: calc(min(92vw, 480px) * 0.45 - 46px);   /* 框高−白边，contain不裁切 */
-}
-.tape { width: 46px; height: 20px; }   /* 图纸46×20 */
-
-/* 便签三槽位：常显，A/B正方形并排、C通栏长方形 */
-.paper-notes {
-  flex: 1; margin-top: 4%;
-  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-  align-content: start;
-}
-.pnote { padding: 14px; }              /* 内边距14，≤3行省略（沿用旧clamp规则） */
-.pnote-a { aspect-ratio: 1; transform: rotate(-3deg); }
-.pnote-b { aspect-ratio: 1; transform: rotate(0.5deg); }
-.pnote-c { grid-column: 1 / -1; aspect-ratio: 300 / 140; transform: rotate(2deg); }
-.pnote.empty { background: rgba(255,246,168,.35); box-shadow: none; }   /* 空白便签 */
-
-/* 右栏：内容块220宽居中，首行下推，底部留白≥8% */
-.paper-right { flex: 0 0 35%; min-width: 0; }
-.paper-rblock { width: 100%; max-width: 220px; margin: 0 auto; padding-top: 9%; padding-bottom: 12%; }
-.care-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 22px; }
-.care-row-text { min-width: 0; }
-.care-label { font-size: 16px; color: #8A867D; margin-bottom: 2px; }
-.care-value { font-size: 28px; font-weight: 700; color: #2B2B2B; line-height: 1.2; word-break: break-all; }
-.care-icon { flex: 0 0 28px; width: 28px; height: 28px; color: rgba(80,100,140,.4); }   /* 灰蓝40%透明 */
-.care-icon svg { width: 100%; height: 100%; display: block; }
-.purchase { font-size: 14px; color: #8A867D; margin-top: 12px; }
-.care-empty { font-size: 13px; color: #B8B4AA; }
-
-/* ===== 纸张 v4：720×1280 画布等比缩放（覆盖旧版，旧纸张样式可日后清理） ===== */
-.paper-mask { display: flex; align-items: center; justify-content: center; }
-.paper {
-  width: 720px; height: 1280px;          /* 画布锁死，等比缩放 */
-  transform: scale(var(--ps, 0.5));
-  transform-origin: 360px 640px;          /* 默认中心；入场时JS改到缩略图 */
-  overflow: hidden;                        /* 禁滚动 */
-  display: flex; gap: 29px;
-  padding: 32px;
-  border-radius: 24px;
-  box-sizing: border-box;
-  animation: paperIn .2s ease;
-}
-@keyframes paperIn {
-  from { transform: scale(calc(var(--ps, .5) * 0.5)); opacity: 0; }
-  to   { transform: scale(var(--ps, .5)); opacity: 1; }
-}
-.paper-x { top: 16px; right: 20px; font-size: 28px; z-index: 3; }
-
-/* 左栏378：照片容器576定高 + 便签 */
-.paper-left { flex: 0 0 378px; display: flex; flex-direction: column; }
-.paper-photo-wrap { height: 576px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.paper-photo { padding: 16px 16px 48px; max-width: 100%; max-height: 100%; }
-.paper-photo img { display: block; max-width: 346px; max-height: 500px; width: auto; height: auto; border-radius: 2px; }
-.tape { width: 46px; height: 20px; }
-
-/* 便签器型落实：A/B方块、C长条，实黄+细描边+轻投影，空白同款式 */
+/* 便签三槽：A/B方块、C长条，实黄+细描边+轻投影，空白同款淡显 */
 .paper-notes { margin-top: 24px; display: grid; grid-template-columns: 150px 150px; gap: 20px; align-content: start; }
 .pnote {
   padding: 14px; box-sizing: border-box;
   background: #FCEE9C; border: 1px solid #E8D77E;
   box-shadow: 0 3px 8px rgba(60,50,30,.15);
-  font-size: 16px;
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "楷体", cursive;
+  font-size: 16px; line-height: 1.5; color: #4A463F;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 .pnote-a { width: 150px; height: 150px; transform: rotate(-3deg); }
 .pnote-b { width: 150px; height: 150px; transform: rotate(0.5deg); }
 .pnote-c { grid-column: 1 / -1; width: 300px; height: 140px; transform: rotate(2deg); }
-.pnote.empty { opacity: .45; }   /* 空白便签同款淡显 */
+.pnote.empty { opacity: .45; }
 
-/* 右栏249：内容块240居中，首行y120，行高96，底留白102，值不折行 */
+/* 右栏249：内容块240居中，首行y120，行高96，底留白≥8%（102） */
 .paper-right { flex: 0 0 249px; min-width: 0; }
 .paper-rblock { width: 240px; margin: 0 auto; padding-top: 120px; padding-bottom: 102px; box-sizing: border-box; }
-.care-row { height: 96px; margin: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.care-row { height: 96px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.care-row-text { min-width: 0; }
 .care-label { font-size: 15px; color: #8A867D; margin-bottom: 2px; }
 .care-value { font-size: 24px; font-weight: 700; color: #2B2B2B; white-space: nowrap; }
 .care-icon { flex: 0 0 24px; width: 24px; height: 24px; color: rgba(80,100,140,.4); }
+.care-icon svg { width: 100%; height: 100%; display: block; }
 .purchase { font-size: 14px; color: #8A867D; margin-top: 16px; }
 .care-empty { font-size: 15px; color: #B8B4AA; padding-top: 120px; }
-
-/* ===== v4.1 补丁：清掉旧绝对定位，纸回归 flex 居中 ===== */
-.paper { position: static; left: auto; top: auto; }
