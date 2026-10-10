@@ -1159,19 +1159,31 @@ function deleteCloth(id) {
 
 // ---------- 大图查看层 ----------
 let currentViewId = null;
+// 纸的等比缩放：纸宽≤屏宽90%、纸高≤屏高90%，锁9:16；所有图纸尺寸严格乘scale
+function fitPaper() {
+  const s = Math.min(window.innerWidth * 0.9 / 720, window.innerHeight * 0.9 / 1280);
+  document.getElementById('paperCard').style.setProperty('--ps', s);
+}
+window.addEventListener('resize', () => {
+  const mask = document.getElementById('paperMask');
+  if (mask && !mask.classList.contains('hidden')) fitPaper();
+});
 
 // 纸张详情页：左列照片+便签，右列档案；点纸外空白或 × 返回
 function openDetail(id, image, ev) {
   const item = allItems.find(i => i.id === id) || {};
   currentViewId = id;
   const paper = document.getElementById('paperCard');
-  document.getElementById('paperMask').classList.remove('hidden');
+  document.getElementById('paperMask').fitPaper();classList.remove('hidden');
 
   // 入场：从被点击的缩略图位置浮出（transform-origin 对准缩略图中心）
+  fitPaper();   // 先定缩放，入场定位要换算
   if (ev) {
+    const s = parseFloat(getComputedStyle(paper).getPropertyValue('--ps')) || 0.5;
     const r = ev.currentTarget.getBoundingClientRect();
-    const pr = paper.getBoundingClientRect();
-    paper.style.transformOrigin = ((r.left + r.width / 2) - pr.left) + 'px ' + ((r.top + r.height / 2) - pr.top) + 'px';
+    const left = (window.innerWidth - 720 * s) / 2;
+    const top = (window.innerHeight - 1280 * s) / 2;
+    paper.style.transformOrigin = (((r.left + r.width / 2) - left) / s) + 'px ' + (((r.top + r.height / 2) - top) / s) + 'px';
   }
 
   const img = document.getElementById('paperImg');
