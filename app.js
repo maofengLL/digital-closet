@@ -1174,7 +1174,8 @@ function openDetail(id, image, ev) {
   const item = allItems.find(i => i.id === id) || {};
   currentViewId = id;
   const paper = document.getElementById('paperCard');
-  document.getElementById('paperMask').fitPaper();classList.remove('hidden');
+  fitPaper();
+  document.getElementById('paperMask').classList.remove('hidden');
 
   // 入场：从被点击的缩略图位置浮出（transform-origin 对准缩略图中心）
   fitPaper();   // 先定缩放，入场定位要换算
