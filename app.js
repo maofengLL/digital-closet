@@ -1174,12 +1174,19 @@ function openDetail(id, image, ev) {
     paper.style.transformOrigin = ((r.left + r.width / 2) - pr.left) + 'px ' + ((r.top + r.height / 2) - pr.top) + 'px';
   }
 
-  document.getElementById('paperImg').src = URL.createObjectURL(image);
+  const img = document.getElementById('paperImg');
+  const st = document.getElementById('paperStamp');
+  img.onload = () => {
+    // 邮戳直径 = 照片短边 × 0.3，限 56~96px
+    const d = Math.max(56, Math.min(96, Math.round(Math.min(img.clientWidth, img.clientHeight) * 0.3)));
+    st.style.width = d + 'px';
+    st.style.height = d + 'px';
+  };
+  img.src = URL.createObjectURL(image);
   // 拍立得随机±2度倾斜
   document.getElementById('paperPhoto').style.setProperty('--tilt', (Math.random() * 4 - 2).toFixed(1) + 'deg');
 
   // 邮戳：仅已核对（careVerified=true），日期=careCompletedAt
-  const st = document.getElementById('paperStamp');
   if (item.careVerified && item.careCompletedAt) {
     const d = new Date(item.careCompletedAt);
     st.textContent = (d.getMonth() + 1) + '.' + d.getDate();
