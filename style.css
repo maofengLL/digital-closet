@@ -379,6 +379,7 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
   font-size: 14px; line-height: 1.5; color: #4A463F;
   box-shadow: 0 3px 8px rgba(60,50,30,.15);
   transform: rotate(var(--ntilt, 0deg));
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;   /* 超长省略，最多3行 */
 }
 
 /* 右列：通栏档案（印刷体） */
