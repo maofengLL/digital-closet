@@ -389,3 +389,46 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
 .care-value { font-size: 14px; color: #2B2B2B; }
 .purchase { font-size: 12px; color: #8A867D; margin-top: 12px; }
 .care-empty { font-size: 13px; color: #B8B4AA; }
+
+/* ===== 纸张详情页 v3（按图纸720×1280比例，覆盖旧版） ===== */
+.paper {
+  width: min(92vw, 480px);
+  aspect-ratio: 720 / 1280;         /* 竖版9:16 */
+  max-height: 90vh;
+  display: flex; gap: 4%;
+  padding: 4.5%;
+}
+
+/* 左栏：照片（45%定高）+ 便签三槽 */
+.paper-left { flex: 0 0 56%; display: flex; flex-direction: column; min-width: 0; }
+.paper-photo-wrap { height: 45%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.paper-photo { padding: 10px 10px 32px; max-width: 100%; max-height: 100%; }
+.paper-photo img {
+  display: block; border-radius: 2px; width: auto; height: auto; max-width: 100%;
+  max-height: calc(min(92vw, 480px) * 0.45 - 46px);   /* 框高−白边，contain不裁切 */
+}
+.tape { width: 46px; height: 20px; }   /* 图纸46×20 */
+
+/* 便签三槽位：常显，A/B正方形并排、C通栏长方形 */
+.paper-notes {
+  flex: 1; margin-top: 4%;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  align-content: start;
+}
+.pnote { padding: 14px; }              /* 内边距14，≤3行省略（沿用旧clamp规则） */
+.pnote-a { aspect-ratio: 1; transform: rotate(-3deg); }
+.pnote-b { aspect-ratio: 1; transform: rotate(0.5deg); }
+.pnote-c { grid-column: 1 / -1; aspect-ratio: 300 / 140; transform: rotate(2deg); }
+.pnote.empty { background: rgba(255,246,168,.35); box-shadow: none; }   /* 空白便签 */
+
+/* 右栏：内容块220宽居中，首行下推，底部留白≥8% */
+.paper-right { flex: 0 0 35%; min-width: 0; }
+.paper-rblock { width: 100%; max-width: 220px; margin: 0 auto; padding-top: 9%; padding-bottom: 12%; }
+.care-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 22px; }
+.care-row-text { min-width: 0; }
+.care-label { font-size: 16px; color: #8A867D; margin-bottom: 2px; }
+.care-value { font-size: 28px; font-weight: 700; color: #2B2B2B; line-height: 1.2; word-break: break-all; }
+.care-icon { flex: 0 0 28px; width: 28px; height: 28px; color: rgba(80,100,140,.4); }   /* 灰蓝40%透明 */
+.care-icon svg { width: 100%; height: 100%; display: block; }
+.purchase { font-size: 14px; color: #8A867D; margin-top: 12px; }
+.care-empty { font-size: 13px; color: #B8B4AA; }
