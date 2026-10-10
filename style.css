@@ -310,3 +310,69 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
   70%  { transform: rotate(-3deg) scale(.94); opacity: 1; }
   100% { transform: rotate(-3deg) scale(1);   opacity: 1; }
 }
+
+/* ===== 纸张详情页 ===== */
+.paper-mask { position: fixed; inset: 0; z-index: 10; background: rgba(0,0,0,.45); animation: fadeIn .2s ease; }
+.paper {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 92%; max-width: 560px; max-height: 88vh; overflow-y: auto;
+  background: #FFFDF6; border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(60,50,30,.25);
+  padding: 18px; display: flex; gap: 14px;
+  animation: paperIn .2s ease;
+}
+@keyframes paperIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(.3); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+.paper-x {
+  position: absolute; top: 8px; right: 12px; z-index: 2;
+  background: none; border: none; color: #B8B4AA; font-size: 22px; padding: 4px;
+}
+
+/* 左列 */
+.paper-left { flex: 0 0 58%; }
+.paper-photo {
+  position: relative;
+  background: #fff; padding: 10px 10px 34px;   /* 底边厚=拍立得 */
+  transform: rotate(var(--tilt, 0deg));         /* 随机±2度 */
+  box-shadow: 0 6px 18px rgba(60,50,30,.18);
+}
+.paper-photo img { width: 100%; display: block; border-radius: 2px; }
+
+/* 和纸胶带：四角各一条，半透明微旋转 */
+.tape { position: absolute; width: 54px; height: 20px; background: rgba(240,235,220,.75); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.tape-tl { top: -8px; left: -14px; transform: rotate(-40deg); }
+.tape-tr { top: -8px; right: -14px; transform: rotate(40deg); }
+.tape-bl { bottom: 22px; left: -16px; transform: rotate(35deg); }
+.tape-br { bottom: 22px; right: -16px; transform: rotate(-35deg); }
+
+/* 纸上邮戳：压照片右下角，戳心在照片边界外 */
+.paper-stamp {
+  position: absolute; right: -10px; bottom: 26px;
+  width: 62px; height: 62px; border-radius: 50%;
+  border: 3px double rgba(43,58,85,.8);
+  background: rgba(43,58,85,.08);
+  color: #2B3A55; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  transform: rotate(-3deg);
+  pointer-events: none;
+}
+
+/* 便签堆：黄便利贴+手写体+微倾斜，最多3张 */
+.paper-notes { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; }
+.pnote {
+  background: #FFF6A8; padding: 10px 12px; max-width: 140px;
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "楷体", cursive;
+  font-size: 14px; line-height: 1.5; color: #4A463F;
+  box-shadow: 0 3px 8px rgba(60,50,30,.15);
+  transform: rotate(var(--ntilt, 0deg));
+}
+
+/* 右列：通栏档案（印刷体） */
+.paper-right { flex: 1; min-width: 0; }
+.care-row { margin-bottom: 10px; }
+.care-label { font-size: 11px; color: #8A867D; margin-bottom: 2px; }
+.care-value { font-size: 14px; color: #2B2B2B; }
+.purchase { font-size: 12px; color: #8A867D; margin-top: 12px; }
+.care-empty { font-size: 13px; color: #B8B4AA; }
