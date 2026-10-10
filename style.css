@@ -481,3 +481,6 @@ body.selecting main { padding-top: 72px; }     /* 多选时给悬浮顶栏让位
 .care-icon { flex: 0 0 24px; width: 24px; height: 24px; color: rgba(80,100,140,.4); }
 .purchase { font-size: 14px; color: #8A867D; margin-top: 16px; }
 .care-empty { font-size: 15px; color: #B8B4AA; padding-top: 120px; }
+
+/* ===== v4.1 补丁：清掉旧绝对定位，纸回归 flex 居中 ===== */
+.paper { position: static; left: auto; top: auto; }
