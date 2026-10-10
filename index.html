@@ -63,13 +63,20 @@
     </div>
   </div>
 
-  <!-- 大图查看层 -->
-  <div id="detail" class="preview hidden">
-    <button class="preview-back" onclick="closeDetail()">←</button>
-    <img id="detailImg" alt="衣服大图">
-    <div class="preview-bar">
-      <button class="danger" onclick="deleteCurrent()">删除这件</button>
-      <button class="primary" onclick="closeDetail()">关闭</button>
+   <!-- 纸张详情页（步骤4a静态骨架） -->
+  <div id="paperMask" class="paper-mask hidden" onclick="if(event.target===this)closeDetail()">
+    <div class="paper" id="paperCard">
+      <button class="paper-x" onclick="closeDetail()">×</button>
+      <div class="paper-left">
+        <div class="paper-photo" id="paperPhoto">
+          <img id="paperImg" alt="衣服照片">
+          <span class="tape tape-tl"></span><span class="tape tape-tr"></span>
+          <span class="tape tape-bl"></span><span class="tape tape-br"></span>
+          <span id="paperStamp" class="paper-stamp hidden"></span>
+        </div>
+        <div id="paperNotes" class="paper-notes"></div>
+      </div>
+      <div class="paper-right" id="paperCare"></div>
     </div>
   </div>
 
