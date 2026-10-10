@@ -420,7 +420,7 @@ function renderBlocks() {
           d.appendChild(st);
         }
         d.appendChild(badge);
-        d.addEventListener('click', () => { if (justDragged()) return; if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image); });
+        d.addEventListener('click', (ev) => { if (justDragged()) return; if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image, ev); });
         bindSortable(d, {
           onHoldStill: () => enterSelectMode(item.id),
           makeGeo: () => makeGeo(row, d, { isRow: true }),
@@ -468,7 +468,7 @@ function renderGrid(cat) {
       div.appendChild(st);
     }
     div.appendChild(badge);
-    div.addEventListener('click', () => { if (justDragged()) return; if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image); });
+    div.addEventListener('click', (ev) => { if (justDragged()) return; if (selectMode) { toggleSelect(item.id); return; } openDetail(item.id, item.image, ev); });
     bindSortable(div, {
       onHoldStill: () => enterSelectMode(item.id),
       makeGeo: () => makeGeo(gridBox, div, { isRow: false }),
@@ -1160,22 +1160,88 @@ function deleteCloth(id) {
 // ---------- 大图查看层 ----------
 let currentViewId = null;
 
-function openDetail(id, image) {
+// 纸张详情页：左列照片+便签，右列档案；点纸外空白或 × 返回
+function openDetail(id, image, ev) {
+  const item = allItems.find(i => i.id === id) || {};
   currentViewId = id;
-  document.getElementById('detailImg').src = URL.createObjectURL(image);
-  document.getElementById('detail').classList.remove('hidden');
+  const paper = document.getElementById('paperCard');
+  document.getElementById('paperMask').classList.remove('hidden');
+
+  // 入场：从被点击的缩略图位置浮出（transform-origin 对准缩略图中心）
+  if (ev) {
+    const r = ev.currentTarget.getBoundingClientRect();
+    const pr = paper.getBoundingClientRect();
+    paper.style.transformOrigin = ((r.left + r.width / 2) - pr.left) + 'px ' + ((r.top + r.height / 2) - pr.top) + 'px';
+  }
+
+  document.getElementById('paperImg').src = URL.createObjectURL(image);
+  // 拍立得随机±2度倾斜
+  document.getElementById('paperPhoto').style.setProperty('--tilt', (Math.random() * 4 - 2).toFixed(1) + 'deg');
+
+  // 邮戳：仅已核对（careVerified=true），日期=careCompletedAt
+  const st = document.getElementById('paperStamp');
+  if (item.careVerified && item.careCompletedAt) {
+    const d = new Date(item.careCompletedAt);
+    st.textContent = (d.getMonth() + 1) + '.' + d.getDate();
+    st.classList.remove('hidden');
+  } else {
+    st.classList.add('hidden');
+  }
+
+  renderPaperNotes(item);
+  renderPaperCare(item);
 }
 
 function closeDetail() {
   currentViewId = null;
-  document.getElementById('detail').classList.add('hidden');
+  document.getElementById('paperMask').classList.add('hidden');
 }
 
-function deleteCurrent() {
-  if (currentViewId === null) return;
-  const id = currentViewId;
-  closeDetail();
-  deleteCloth(id);
+// 便签堆：最新3张，各自微倾斜；无便签则整区不渲染
+function renderPaperNotes(item) {
+  const box = document.getElementById('paperNotes');
+  box.innerHTML = '';
+  if (!Array.isArray(item.notes) || !item.notes.length) return;
+  const latest = item.notes.slice(-3).reverse();
+  latest.forEach((n, i) => {
+    const d = document.createElement('div');
+    d.className = 'pnote';
+    d.style.setProperty('--ntilt', ((i % 2 ? 1 : -1) * (1 + i)) + 'deg');
+    d.textContent = n.text;
+    box.appendChild(d);
+  });
+}
+
+// 洗护档案区：空字段一律不显示；全空显示灰字；购入时间殿后（小一号灰色，填了才显示）
+const CARE_LABELS = { materials: '材质', wash: '洗涤方式', waterTemp: '水温', bleach: '漂白', dry: '干燥', iron: '熨烫' };
+
+function renderPaperCare(item) {
+  const box = document.getElementById('paperCare');
+  box.innerHTML = '';
+  let any = false;
+  ['materials', 'wash', 'waterTemp', 'bleach', 'dry', 'iron'].forEach(k => {
+    let v = item.care ? item.care[k] : '';
+    if (k === 'materials') v = (Array.isArray(v) && v.length) ? v.join('、') : '';
+    if (!v) return;                       // 空字段不显示
+    any = true;
+    const row = document.createElement('div');
+    row.className = 'care-row';
+    row.innerHTML = '<p class="care-label">' + CARE_LABELS[k] + '</p><p class="care-value">' + v + '</p>';
+    box.appendChild(row);
+  });
+  if (item.meta && item.meta.purchaseDate) {
+    any = true;
+    const p = document.createElement('p');
+    p.className = 'purchase';
+    p.textContent = '购入于 ' + item.meta.purchaseDate;
+    box.appendChild(p);
+  }
+  if (!any) {
+    const p = document.createElement('p');
+    p.className = 'care-empty';
+    p.textContent = '洗水唛档案还是空的';
+    box.appendChild(p);
+  }
 }
 
 // 长按 600ms 快捷删除；电脑右键代替
